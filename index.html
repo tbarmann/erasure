@@ -98,6 +98,7 @@
     transition: background 0.15s, border-color 0.15s;
   }
   #fileBtn:hover, .btn:hover { background: rgba(236,228,214,0.08); border-color: rgba(236,228,214,0.6); }
+  .btn.active { background: var(--select); border-color: var(--select); color: #fff; }
   .btn:disabled { opacity: 0.4; cursor: not-allowed; }
   .btn:focus-visible, #fileBtn:focus-visible, button:focus-visible, input:focus-visible {
     outline: 2px solid var(--select); outline-offset: 2px;
@@ -107,25 +108,98 @@
   .btn-row { display: flex; gap: 8px; }
   .btn-row .btn { flex: 1; }
 
-  .swatch-row { display: flex; gap: 8px; align-items: center; }
+  .swatch-row { display: flex; gap: 16px; }
+  .swatch-item { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .swatch-label {
+    font-family: "Special Elite", monospace;
+    font-size: 0.62rem;
+    color: var(--sidebar-muted);
+    letter-spacing: 0.03em;
+  }
   .swatch {
-    width: 30px; height: 30px; border-radius: 50%;
-    border: 2px solid rgba(236,228,214,0.3);
+    width: 32px; height: 32px;
+    border-radius: 5px;
+    border: none;
     cursor: pointer;
     padding: 0;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.14);
   }
-  .swatch.active { border-color: var(--accent-hi); box-shadow: 0 0 0 2px var(--accent-hi); }
+  .swatch.active { box-shadow: 0 0 0 2px var(--select); }
   #customColor {
-    width: 30px; height: 30px; border: none; background: none; padding: 0; cursor: pointer;
-    border-radius: 50%; overflow: hidden;
+    width: 32px; height: 32px;
+    border: none; background: none; padding: 0; cursor: pointer;
+    border-radius: 5px; overflow: hidden;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.14);
   }
-  #customColor::-webkit-color-swatch-wrapper { padding: 0; border-radius: 50%; }
-  #customColor::-webkit-color-swatch { border: 2px solid rgba(236,228,214,0.3); border-radius: 50%; }
+  #customColor.active { box-shadow: 0 0 0 2px var(--select); }
+  #customColor::-webkit-color-swatch-wrapper { padding: 0; border-radius: 5px; }
+  #customColor::-webkit-color-swatch { border: none; border-radius: 5px; }
+  #customColor::-moz-color-swatch { border: none; border-radius: 5px; }
 
   .check-row { display: flex; align-items: center; gap: 8px; font-size: 0.86rem; color: var(--sidebar-text); cursor: pointer; }
   .check-row input { accent-color: var(--accent); width: 16px; height: 16px; }
 
   .hint { font-size: 0.76rem; color: var(--sidebar-muted); line-height: 1.45; margin: 8px 0 0; }
+
+  .depth-picker { position: relative; }
+  .depth-btn { display: flex; align-items: center; gap: 10px; }
+  .depth-swatch {
+    flex: 0 0 auto;
+    width: 46px; height: 24px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(236,228,214,0.06);
+    border-radius: 2px;
+  }
+  .depth-bar { display: block; width: 32px; background: var(--sidebar-text); border-radius: 1px; }
+  .depth-btn-label { flex: 1; font-size: 0.85rem; }
+  .depth-caret { font-size: 0.65rem; color: var(--sidebar-muted); }
+  .depth-panel {
+    display: none;
+    position: absolute;
+    left: 0; right: 0;
+    margin-top: 6px;
+    background: #2a231c;
+    border: 1px solid rgba(236,228,214,0.25);
+    border-radius: 4px;
+    box-shadow: 0 10px 26px rgba(0,0,0,0.45);
+    padding: 6px;
+    z-index: 20;
+  }
+  .depth-panel.open { display: block; }
+  .depth-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 8px;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  .depth-row:hover { background: rgba(236,228,214,0.08); }
+  .depth-row.active { background: rgba(162,62,45,0.35); }
+  .depth-row-label { font-size: 0.82rem; color: var(--sidebar-text); }
+  .depth-divider { height: 1px; background: rgba(236,228,214,0.15); margin: 6px 2px; }
+  .depth-custom-row { display: flex; align-items: center; gap: 8px; padding: 4px 6px 2px; }
+  .depth-custom-row input[type="number"] {
+    width: 56px;
+    background: rgba(236,228,214,0.08);
+    border: 1px solid rgba(236,228,214,0.25);
+    border-radius: 3px;
+    color: var(--sidebar-text);
+    font-family: "Source Serif 4", serif;
+    font-size: 0.85rem;
+    padding: 5px 6px;
+  }
+  .depth-custom-unit { font-size: 0.78rem; color: var(--sidebar-muted); }
+  .depth-custom-btn {
+    margin-left: auto;
+    background: var(--accent);
+    border: 1px solid var(--accent);
+    color: #fff;
+    font-family: "Special Elite", monospace;
+    font-size: 0.7rem;
+    border-radius: 3px;
+    padding: 6px 10px;
+    cursor: pointer;
+  }
+  .depth-custom-btn:hover { background: var(--accent-hi); border-color: var(--accent-hi); }
 
   #titleInput {
     width: 100%;
@@ -150,6 +224,34 @@
   #exportBtn:hover:not(:disabled) { background: var(--accent-hi); border-color: var(--accent-hi); }
 
   #status { font-size: 0.78rem; color: var(--sidebar-muted); line-height: 1.4; min-height: 1.2em; }
+
+  .zoom-row { display: flex; align-items: center; gap: 8px; }
+  .zoom-btn {
+    width: 32px; height: 32px;
+    border-radius: 4px;
+    border: 1px solid rgba(236,228,214,0.3);
+    background: transparent;
+    color: var(--sidebar-text);
+    font-size: 1.15rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .zoom-btn:hover:not(:disabled) { background: rgba(236,228,214,0.08); border-color: rgba(236,228,214,0.6); }
+  .zoom-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .zoom-label {
+    flex: 1;
+    text-align: center;
+    background: transparent;
+    border: 1px solid rgba(236,228,214,0.2);
+    border-radius: 4px;
+    color: var(--sidebar-text);
+    font-family: "Special Elite", monospace;
+    font-size: 0.8rem;
+    padding: 8px 0;
+    cursor: pointer;
+  }
+  .zoom-label:hover:not(:disabled) { border-color: rgba(236,228,214,0.6); }
+  .zoom-label:disabled { opacity: 0.35; cursor: not-allowed; }
 
   /* ---------- Main viewer ---------- */
   #main {
@@ -246,27 +348,59 @@
   </div>
 
   <div class="section">
-    <p class="section-label">mark color</p>
-    <div class="swatch-row">
-      <button class="swatch active" data-color="#14100d" style="background:#14100d" type="button" aria-label="Black"></button>
-      <button class="swatch" data-color="#f7f3e8" style="background:#f7f3e8" type="button" aria-label="White"></button>
-      <input id="customColor" type="color" value="#14100d" aria-label="Custom color">
+    <p class="section-label">zoom</p>
+    <div class="zoom-row">
+      <button id="zoomOutBtn" class="zoom-btn" type="button" disabled aria-label="Zoom out">−</button>
+      <button id="zoomLabel" class="zoom-label" type="button" disabled title="Reset to 100%">100%</button>
+      <button id="zoomInBtn" class="zoom-btn" type="button" disabled aria-label="Zoom in">+</button>
     </div>
   </div>
 
   <div class="section">
-    <label class="check-row">
-      <input id="lockHeightToggle" type="checkbox" checked>
-      Keep every line the same depth
-    </label>
-    <p class="hint">New blocks match the last height you settled on. Select a block and drag its side handles to fine-tune that height — everything after it will follow. Uncheck to resize any block freely on all sides.</p>
+    <p class="section-label">mark color</p>
+    <div class="swatch-row">
+      <div class="swatch-item">
+        <button class="swatch active" data-color="#14100d" style="background:#14100d" type="button" aria-label="Black"></button>
+        <span class="swatch-label">Black</span>
+      </div>
+      <div class="swatch-item">
+        <button class="swatch" data-color="#f7f3e8" style="background:#f7f3e8" type="button" aria-label="White"></button>
+        <span class="swatch-label">White</span>
+      </div>
+      <div class="swatch-item">
+        <input id="customColor" type="color" value="#14100d" aria-label="Custom color">
+        <span class="swatch-label">Custom</span>
+      </div>
+    </div>
+    <div style="height:10px;"></div>
+    <button id="applyAllBtn" class="btn" type="button" disabled>Apply to all blocks</button>
   </div>
 
   <div class="section">
-    <label class="check-row">
-      <input id="peekToggle" type="checkbox">
-      Peek through marks
-    </label>
+    <div class="depth-picker" id="depthPicker">
+      <button id="depthBtn" class="btn depth-btn" type="button" aria-haspopup="listbox" aria-expanded="false">
+        <span class="depth-swatch"><span id="depthBtnBar" class="depth-bar"></span></span>
+        <span id="depthBtnLabel" class="depth-btn-label">16 pt</span>
+        <span class="depth-caret">▾</span>
+      </button>
+      <div id="depthPanel" class="depth-panel" role="listbox" aria-label="Redaction depth presets">
+        <div id="depthPresetList"></div>
+        <div class="depth-divider"></div>
+        <div class="depth-custom-row">
+          <input id="customDepthInput" type="number" min="4" max="200" step="1" inputmode="numeric" aria-label="Custom depth in points">
+          <span class="depth-custom-unit">pt</span>
+          <button id="customDepthApply" class="depth-custom-btn" type="button">Set</button>
+        </div>
+      </div>
+    </div>
+
+    <p class="hint">Every block keeps the same depth, so your lines stay lined up. Pick a preset here — if a block's selected, it's applied right away.</p>
+    <div style="height:10px;"></div>
+    <button id="applySizeAllBtn" class="btn" type="button" disabled>Apply size to all blocks</button>
+  </div>
+
+  <div class="section">
+    <button id="peekBtn" class="btn" type="button">Hold to peek</button>
   </div>
 
   <div class="section btn-row">
@@ -314,10 +448,22 @@ const statusEl = document.getElementById('status');
 const undoBtn = document.getElementById('undoBtn');
 const clearAllBtn = document.getElementById('clearAllBtn');
 const exportBtn = document.getElementById('exportBtn');
-const peekToggle = document.getElementById('peekToggle');
+const peekBtn = document.getElementById('peekBtn');
 const titleInput = document.getElementById('titleInput');
 const customColor = document.getElementById('customColor');
-const lockHeightToggle = document.getElementById('lockHeightToggle');
+const applyAllBtn = document.getElementById('applyAllBtn');
+const applySizeAllBtn = document.getElementById('applySizeAllBtn');
+const zoomOutBtn = document.getElementById('zoomOutBtn');
+const zoomInBtn = document.getElementById('zoomInBtn');
+const zoomLabel = document.getElementById('zoomLabel');
+const depthPicker = document.getElementById('depthPicker');
+const depthBtn = document.getElementById('depthBtn');
+const depthPanel = document.getElementById('depthPanel');
+const depthPresetList = document.getElementById('depthPresetList');
+const customDepthInput = document.getElementById('customDepthInput');
+const customDepthApply = document.getElementById('customDepthApply');
+const depthBtnBar = document.getElementById('depthBtnBar');
+const depthBtnLabel = document.getElementById('depthBtnLabel');
 const saveProgressBtn = document.getElementById('saveProgressBtn');
 const loadProgressBtn = document.getElementById('loadProgressBtn');
 const progressInput = document.getElementById('progressInput');
@@ -326,8 +472,10 @@ let pagesData = [];        // {pageNum, canvas, overlay, octx, marks:[], renderS
 let undoStack = [];        // {type:'add'|'remove'|'move'|'resize', pageIndex, mark, ...}
 let currentColor = '#14100d';
 let peeking = false;
-let lockHeight = true;
+let lockHeight = true;  // every redaction block keeps a consistent depth, by design
 let lockedHeightPt = 16;   // stored in PDF points so it stays consistent across pages at different scales
+let zoom = 1;
+const ZOOM_MIN = 0.5, ZOOM_MAX = 2.5, ZOOM_STEP = 0.1;
 
 let selected = null;       // { pd, mark } | null
 
@@ -342,6 +490,95 @@ let resizeHandle = null;
 
 const HANDLE_RADIUS = 16;
 const HANDLE_SIZE = 9;
+const DEPTH_PRESETS = [8, 12, 16, 22, 30, 40];
+
+function buildDepthPanel() {
+  depthPresetList.innerHTML = '';
+  DEPTH_PRESETS.forEach(pt => {
+    const row = document.createElement('div');
+    row.className = 'depth-row';
+    row.setAttribute('role', 'option');
+    row.dataset.pt = pt;
+
+    const swatch = document.createElement('span');
+    swatch.className = 'depth-swatch';
+    const bar = document.createElement('span');
+    bar.className = 'depth-bar';
+    bar.style.height = Math.min(pt, 26) + 'px';
+    swatch.appendChild(bar);
+
+    const label = document.createElement('span');
+    label.className = 'depth-row-label';
+    label.textContent = pt + ' pt';
+
+    row.appendChild(swatch);
+    row.appendChild(label);
+    row.addEventListener('click', () => choosePreset(pt));
+    depthPresetList.appendChild(row);
+  });
+}
+
+function openDepthPanel() {
+  depthPanel.classList.add('open');
+  depthBtn.setAttribute('aria-expanded', 'true');
+  customDepthInput.value = lockedHeightPt;
+}
+function closeDepthPanel() { depthPanel.classList.remove('open'); depthBtn.setAttribute('aria-expanded', 'false'); }
+
+depthBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  depthPanel.classList.contains('open') ? closeDepthPanel() : openDepthPanel();
+});
+document.addEventListener('pointerdown', e => {
+  if (!e.target.closest('#depthPicker')) closeDepthPanel();
+});
+
+function applyCustomDepth() {
+  const val = Math.round(parseFloat(customDepthInput.value));
+  if (!isFinite(val) || val <= 0) return;
+  choosePreset(Math.min(200, Math.max(4, val)));
+  closeDepthPanel();
+}
+customDepthApply.addEventListener('click', applyCustomDepth);
+customDepthInput.addEventListener('keydown', e => {
+  e.stopPropagation(); // don't let arrow keys / backspace here reach the block-nudge/delete shortcuts
+  if (e.key === 'Enter') { e.preventDefault(); applyCustomDepth(); }
+});
+customDepthInput.addEventListener('pointerdown', e => e.stopPropagation());
+
+function choosePreset(pt) {
+  lockedHeightPt = pt;
+  updateDepthUI();
+  closeDepthPanel();
+
+  if (selected) {
+    const m = selected.mark;
+    const before = { x: m.x, y: m.y, w: m.w, h: m.h };
+    const cy = m.y + m.h / 2;
+    const newH = pt * selected.pd.renderScale;
+    m.h = newH;
+    m.y = cy - newH / 2;
+    if (m.y !== before.y || m.h !== before.h) {
+      undoStack.push({ type: 'resize', pageIndex: pagesData.indexOf(selected.pd), mark: m, before });
+      refreshButtons();
+    }
+    redraw(selected.pd);
+  }
+}
+
+function updateDepthUI() {
+  depthBtnBar.style.height = Math.min(lockedHeightPt, 26) + 'px';
+  let matched = false;
+  depthPanel.querySelectorAll('.depth-row').forEach(r => {
+    const isActive = parseInt(r.dataset.pt, 10) === lockedHeightPt;
+    r.classList.toggle('active', isActive);
+    if (isActive) matched = true;
+  });
+  depthBtnLabel.textContent = matched ? `${lockedHeightPt} pt` : `${lockedHeightPt} pt (custom)`;
+}
+
+buildDepthPanel();
+updateDepthUI();
 
 fileBtn.addEventListener('click', () => fileInput.click());
 dropBtn.addEventListener('click', () => fileInput.click());
@@ -358,31 +595,50 @@ document.body.addEventListener('drop', e => {
   if (f) loadFile(f);
 });
 
+function setActiveColorControl(el) {
+  document.querySelectorAll('.swatch, #customColor').forEach(e => e.classList.remove('active'));
+  el.classList.add('active');
+}
+
 document.querySelectorAll('.swatch').forEach(sw => {
   sw.addEventListener('click', () => {
-    document.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
-    sw.classList.add('active');
+    setActiveColorControl(sw);
     currentColor = sw.dataset.color;
     if (selected) { selected.mark.color = currentColor; redraw(selected.pd); }
   });
 });
 customColor.addEventListener('input', () => {
-  document.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+  setActiveColorControl(customColor);
   currentColor = customColor.value;
   if (selected) { selected.mark.color = currentColor; redraw(selected.pd); }
 });
 
-lockHeightToggle.addEventListener('change', () => {
-  lockHeight = lockHeightToggle.checked;
-  if (selected) redraw(selected.pd);
-});
-
-peekToggle.addEventListener('change', () => {
-  peeking = peekToggle.checked;
+function setPeeking(on) {
+  if (peeking === on) return;
+  peeking = on;
+  peekBtn.classList.toggle('active', on);
   pagesData.forEach(pd => redraw(pd));
-});
+}
+peekBtn.addEventListener('pointerdown', e => { e.preventDefault(); setPeeking(true); });
+peekBtn.addEventListener('pointerup', () => setPeeking(false));
+peekBtn.addEventListener('pointerleave', () => setPeeking(false));
+peekBtn.addEventListener('pointercancel', () => setPeeking(false));
 
 undoBtn.addEventListener('click', undo);
+applyAllBtn.addEventListener('click', applyColorToAll);
+applySizeAllBtn.addEventListener('click', applySizeToAll);
+zoomOutBtn.addEventListener('click', () => setZoom(zoom - ZOOM_STEP));
+zoomInBtn.addEventListener('click', () => setZoom(zoom + ZOOM_STEP));
+zoomLabel.addEventListener('click', () => setZoom(1));
+
+function setZoom(z) {
+  zoom = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, z));
+  zoomLabel.textContent = Math.round(zoom * 100) + '%';
+  pagesData.forEach(pd => {
+    pd.pageWrap.style.width = (pd.baseWidth * zoom) + 'px';
+    pd.pageWrap.style.height = (pd.baseHeight * zoom) + 'px';
+  });
+}
 clearAllBtn.addEventListener('click', () => {
   if (!confirm('Clear every mark on every page?')) return;
   pagesData.forEach(pd => pd.marks = []);
@@ -419,6 +675,12 @@ window.addEventListener('keydown', e => {
   if (e.key === 'Escape') { deselect(); return; }
   if (!selected) return;
   const { pd, mark } = selected;
+
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'd') {
+    e.preventDefault();
+    duplicateSelected();
+    return;
+  }
 
   if (e.key === 'Delete' || e.key === 'Backspace') {
     e.preventDefault();
@@ -469,6 +731,13 @@ function resetWorkspace() {
   refreshButtons();
   exportBtn.disabled = true;
   saveProgressBtn.disabled = true;
+  applyAllBtn.disabled = true;
+  applySizeAllBtn.disabled = true;
+  zoomOutBtn.disabled = true;
+  zoomInBtn.disabled = true;
+  zoomLabel.disabled = true;
+  zoom = 1;
+  zoomLabel.textContent = '100%';
 }
 
 function createPageShell(viewportPt, renderScale, pageNum, totalPages) {
@@ -509,7 +778,8 @@ function createPageShell(viewportPt, renderScale, pageNum, totalPages) {
 
   const pd = {
     pageNum,
-    canvas, overlay,
+    canvas, overlay, pageWrap,
+    baseWidth: width, baseHeight: height,
     octx: overlay.getContext('2d'),
     marks: [],
     renderScale,
@@ -551,6 +821,11 @@ async function loadPdf(file) {
     statusEl.textContent = `${pdfDoc.numPages} page${pdfDoc.numPages > 1 ? 's' : ''} loaded. Drag out a block over the words you want gone.`;
     exportBtn.disabled = false;
     saveProgressBtn.disabled = false;
+    applyAllBtn.disabled = false;
+    applySizeAllBtn.disabled = false;
+    zoomOutBtn.disabled = false;
+    zoomInBtn.disabled = false;
+    zoomLabel.disabled = false;
   } catch (err) {
     console.error(err);
     statusEl.textContent = "Couldn't read that PDF. Try a different file.";
@@ -624,6 +899,11 @@ async function loadTxt(file) {
     statusEl.textContent = `${totalPages} page${totalPages > 1 ? 's' : ''} typeset. Drag out a block over the words you want gone.`;
     exportBtn.disabled = false;
     saveProgressBtn.disabled = false;
+    applyAllBtn.disabled = false;
+    applySizeAllBtn.disabled = false;
+    zoomOutBtn.disabled = false;
+    zoomInBtn.disabled = false;
+    zoomLabel.disabled = false;
   } catch (err) {
     console.error(err);
     statusEl.textContent = "Couldn't read that text file.";
@@ -722,6 +1002,57 @@ function deselect() {
   redraw(pd);
 }
 
+function applyColorToAll() {
+  if (!pagesData.length) return;
+  const changes = [];
+  pagesData.forEach(pd => {
+    pd.marks.forEach(mark => {
+      if (mark.color !== currentColor) {
+        changes.push({ mark, before: mark.color });
+        mark.color = currentColor;
+      }
+    });
+  });
+  if (changes.length) {
+    undoStack.push({ type: 'colorAll', changes });
+    pagesData.forEach(pd => redraw(pd));
+    refreshButtons();
+  }
+}
+
+function applySizeToAll() {
+  if (!pagesData.length) return;
+  const changes = [];
+  pagesData.forEach(pd => {
+    const targetH = lockedHeightPt * pd.renderScale;
+    pd.marks.forEach(mark => {
+      if (Math.abs(mark.h - targetH) > 0.01) {
+        const before = { x: mark.x, y: mark.y, w: mark.w, h: mark.h };
+        const cy = mark.y + mark.h / 2;
+        mark.h = targetH;
+        mark.y = cy - targetH / 2;
+        changes.push({ mark, before });
+      }
+    });
+  });
+  if (changes.length) {
+    undoStack.push({ type: 'resizeAll', changes });
+    pagesData.forEach(pd => redraw(pd));
+    refreshButtons();
+  }
+}
+
+function duplicateSelected() {
+  if (!selected) return;
+  const { pd, mark } = selected;
+  const offsetPx = 8 * pd.renderScale; // ~8pt, so the offset reads the same regardless of page scale
+  const clone = { x: mark.x + offsetPx, y: mark.y + offsetPx, w: mark.w, h: mark.h, color: mark.color };
+  pd.marks.push(clone);
+  undoStack.push({ type: 'add', pageIndex: pagesData.indexOf(pd), mark: clone });
+  selectMark(pd, clone);
+  refreshButtons();
+}
+
 /* ---------- pointer interaction ---------- */
 
 function attachPointerHandlers(overlay, pd) {
@@ -755,12 +1086,8 @@ function attachPointerHandlers(overlay, pd) {
 
     deselect();
     dragMode = 'draw';
-    if (lockHeight) {
-      const lockedPx = lockedHeightPt * pd.renderScale;
-      tempMark = { x: pos.x, y: pos.y - lockedPx / 2, w: 0, h: lockedPx, color: currentColor };
-    } else {
-      tempMark = { x: pos.x, y: pos.y, w: 0, h: 0, color: currentColor };
-    }
+    const lockedPx = lockedHeightPt * pd.renderScale;
+    tempMark = { x: pos.x, y: pos.y, w: 0, h: lockedPx, color: currentColor };
     drawing = true;
   });
 
@@ -838,6 +1165,7 @@ function finishStroke(pd) {
 function syncLockedHeight(hPx, pd) {
   lockedHeightPt = Math.round(Math.abs(hPx) / pd.renderScale);
   lockedHeightPt = Math.min(200, Math.max(4, lockedHeightPt));
+  updateDepthUI();
 }
 
 /* ---------- drawing to canvas ---------- */
@@ -867,7 +1195,7 @@ function drawHandles(ctx, m) {
 function redraw(pd, preview) {
   const ctx = pd.octx;
   ctx.clearRect(0, 0, pd.overlay.width, pd.overlay.height);
-  ctx.globalAlpha = peeking ? 0.15 : 1;
+  ctx.globalAlpha = peeking ? 0.35 : 1;
   pd.marks.forEach(m => drawRect(ctx, m));
   if (preview) drawRect(ctx, preview);
   ctx.globalAlpha = 1;
@@ -879,6 +1207,22 @@ function redraw(pd, preview) {
 function undo() {
   const action = undoStack.pop();
   if (!action) return;
+
+  if (action.type === 'colorAll') {
+    action.changes.forEach(c => { c.mark.color = c.before; });
+    pagesData.forEach(pd => redraw(pd));
+    refreshButtons();
+    return;
+  }
+  if (action.type === 'resizeAll') {
+    action.changes.forEach(c => {
+      c.mark.x = c.before.x; c.mark.y = c.before.y; c.mark.w = c.before.w; c.mark.h = c.before.h;
+    });
+    pagesData.forEach(pd => redraw(pd));
+    refreshButtons();
+    return;
+  }
+
   const pd = pagesData[action.pageIndex];
   if (!pd) return refreshButtons();
 
@@ -950,8 +1294,12 @@ async function saveProgress() {
   if (!pagesData.length) return;
   const payload = {
     kind: 'erasure-progress',
-    version: 1,
+    version: 2,
     savedAt: new Date().toISOString(),
+    settings: {
+      color: currentColor,
+      depthPt: lockedHeightPt
+    },
     pages: pagesData.map(pd => ({
       width: Math.round(pd.viewportPt.width * 100) / 100,
       height: Math.round(pd.viewportPt.height * 100) / 100,
@@ -969,6 +1317,18 @@ async function saveProgress() {
   await saveFile(name + '.json', blob);
 }
 
+function setCurrentColor(color) {
+  currentColor = color;
+  const lower = color.toLowerCase();
+  const preset = Array.from(document.querySelectorAll('.swatch')).find(s => s.dataset.color.toLowerCase() === lower);
+  if (preset) {
+    setActiveColorControl(preset);
+  } else {
+    customColor.value = color;
+    setActiveColorControl(customColor);
+  }
+}
+
 function applyProgress(data) {
   if (!data || data.kind !== 'erasure-progress' || !Array.isArray(data.pages)) {
     alert("That doesn't look like a saved Erasure progress file.");
@@ -977,6 +1337,13 @@ function applyProgress(data) {
   if (!pagesData.length) {
     alert('Load the same document first, then load its saved progress.');
     return;
+  }
+  if (data.settings) {
+    if (typeof data.settings.color === 'string') setCurrentColor(data.settings.color);
+    if (typeof data.settings.depthPt === 'number' && isFinite(data.settings.depthPt)) {
+      lockedHeightPt = Math.min(200, Math.max(4, Math.round(data.settings.depthPt)));
+      updateDepthUI();
+    }
   }
   let mismatched = false;
   let touched = 0;
