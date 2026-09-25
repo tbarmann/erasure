@@ -141,6 +141,29 @@
 
   .hint { font-size: 0.76rem; color: var(--sidebar-muted); line-height: 1.45; margin: 8px 0 0; }
 
+  .arrange-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .arrange-btn {
+    display: flex; align-items: center; justify-content: center;
+    height: 34px;
+    background: transparent;
+    border: 1px solid rgba(236,228,214,0.3);
+    border-radius: 3px;
+    color: var(--sidebar-text);
+    cursor: pointer;
+    padding: 0;
+  }
+  .arrange-btn:hover:not(:disabled) { background: rgba(236,228,214,0.08); border-color: rgba(236,228,214,0.6); }
+  .arrange-btn:disabled { opacity: 0.32; cursor: not-allowed; }
+  .arrange-btn svg { width: 20px; height: 20px; }
+  .arrange-btn rect { fill: currentColor; }
+  .arrange-btn line { stroke: var(--accent-hi); stroke-width: 1.2; }
+  .arrange-wide {
+    grid-column: 1 / -1;
+    font-family: "Special Elite", monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.03em;
+  }
+
   .depth-picker { position: relative; }
   .depth-btn { display: flex; align-items: center; gap: 10px; }
   .depth-swatch {
@@ -310,17 +333,6 @@
     padding: 3px 7px;
     align-self: center;
   }
-  .page-clear {
-    font-family: "Special Elite", monospace;
-    font-size: 0.65rem;
-    background: rgba(239,231,214,0.9);
-    border: 1px solid var(--line);
-    color: var(--ink-soft);
-    border-radius: 3px;
-    padding: 3px 8px;
-    cursor: pointer;
-  }
-  .page-clear:hover { background: #fff; color: var(--accent); border-color: var(--accent); }
 
   ::-webkit-scrollbar { width: 10px; height: 10px; }
   ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.25); border-radius: 6px; }
@@ -400,6 +412,41 @@
   </div>
 
   <div class="section">
+    <p class="section-label">arrange</p>
+    <div class="arrange-grid">
+      <button class="arrange-btn" type="button" data-arrange="alignLeft" disabled title="Align left">
+        <svg viewBox="0 0 20 20"><line x1="3" y1="2" x2="3" y2="18"/><rect x="3.8" y="4" width="12" height="3.4"/><rect x="3.8" y="12.6" width="8" height="3.4"/></svg>
+      </button>
+      <button class="arrange-btn" type="button" data-arrange="alignCenterH" disabled title="Align centers horizontally">
+        <svg viewBox="0 0 20 20"><line x1="10" y1="2" x2="10" y2="18"/><rect x="4" y="4" width="12" height="3.4"/><rect x="6" y="12.6" width="8" height="3.4"/></svg>
+      </button>
+      <button class="arrange-btn" type="button" data-arrange="alignRight" disabled title="Align right">
+        <svg viewBox="0 0 20 20"><line x1="17" y1="2" x2="17" y2="18"/><rect x="4.2" y="4" width="12" height="3.4"/><rect x="8.2" y="12.6" width="8" height="3.4"/></svg>
+      </button>
+      <button class="arrange-btn" type="button" data-arrange="alignTop" disabled title="Align top">
+        <svg viewBox="0 0 20 20"><line x1="2" y1="3" x2="18" y2="3"/><rect x="4" y="3.8" width="3.4" height="12"/><rect x="12.6" y="3.8" width="3.4" height="8"/></svg>
+      </button>
+      <button class="arrange-btn" type="button" data-arrange="alignMiddleV" disabled title="Align middles vertically">
+        <svg viewBox="0 0 20 20"><line x1="2" y1="10" x2="18" y2="10"/><rect x="4" y="4" width="3.4" height="12"/><rect x="12.6" y="6" width="3.4" height="8"/></svg>
+      </button>
+      <button class="arrange-btn" type="button" data-arrange="alignBottom" disabled title="Align bottom">
+        <svg viewBox="0 0 20 20"><line x1="2" y1="17" x2="18" y2="17"/><rect x="4" y="4.2" width="3.4" height="12"/><rect x="12.6" y="8.2" width="3.4" height="8"/></svg>
+      </button>
+      <button class="arrange-btn" type="button" data-arrange="distributeV" disabled title="Space evenly, top to bottom">
+        <svg viewBox="0 0 20 20"><rect x="3" y="2.5" width="14" height="3"/><rect x="3" y="8.5" width="14" height="3"/><rect x="3" y="14.5" width="14" height="3"/></svg>
+      </button>
+      <button class="arrange-btn" type="button" data-arrange="distributeH" disabled title="Space evenly, left to right">
+        <svg viewBox="0 0 20 20"><rect x="2.5" y="3" width="3" height="14"/><rect x="8.5" y="3" width="3" height="14"/><rect x="14.5" y="3" width="3" height="14"/></svg>
+      </button>
+      <button class="arrange-btn" type="button" data-arrange="matchWidth" disabled title="Match the widest block">
+        <svg viewBox="0 0 20 20"><line x1="2.5" y1="2" x2="2.5" y2="18"/><line x1="17.5" y1="2" x2="17.5" y2="18"/><rect x="3" y="4" width="14" height="3.4"/><rect x="3" y="12.6" width="14" height="3.4"/></svg>
+      </button>
+      <button class="arrange-btn arrange-wide" type="button" data-arrange="stackLines" disabled title="Align left, match width, and space evenly">Stack as lines</button>
+    </div>
+    <p class="hint" id="arrangeHint">Shift-click blocks to select several, or Alt-drag a box around them.</p>
+  </div>
+
+  <div class="section">
     <button id="peekBtn" class="btn" type="button">Hold to peek</button>
   </div>
 
@@ -415,7 +462,7 @@
       <button id="loadProgressBtn" class="btn" type="button">Load progress…</button>
     </div>
     <input id="progressInput" type="file" accept="application/json,.json">
-    <p class="hint">Saves only your redaction positions, not the document. To resume, reopen the same file first, then load its saved progress.</p>
+    <p class="hint">Saves only your redaction positions, not the document. The save dialog opens in the document's own folder, and saving again overwrites the same file. To resume, reopen the same file first, then load its saved progress.</p>
   </div>
 
   <div class="section" style="margin-top:auto;">
@@ -431,6 +478,7 @@
     <h2>Drop a PDF or .txt file here</h2>
     <p>Nothing you mark ever leaves your browser. Drag out a block over the words you want gone — it stays selected, so you can drag its edges to resize or nudge it with the arrow keys. Click any existing block to select it again. Backspace deletes it. Export bakes everything in permanently.</p>
     <button class="btn" id="dropBtn" type="button">Choose a file…</button>
+    <button class="btn" id="resumeBtn" type="button" style="display:none; margin-top:10px;">Resume last session</button>
   </div>
   <div id="pages"></div>
 </main>
@@ -467,6 +515,8 @@ const depthBtnLabel = document.getElementById('depthBtnLabel');
 const saveProgressBtn = document.getElementById('saveProgressBtn');
 const loadProgressBtn = document.getElementById('loadProgressBtn');
 const progressInput = document.getElementById('progressInput');
+const arrangeHint = document.getElementById('arrangeHint');
+const resumeBtn = document.getElementById('resumeBtn');
 
 let pagesData = [];        // {pageNum, canvas, overlay, octx, marks:[], renderScale, viewportPt}
 let undoStack = [];        // {type:'add'|'remove'|'move'|'resize', pageIndex, mark, ...}
@@ -475,9 +525,21 @@ let peeking = false;
 let lockHeight = true;  // every redaction block keeps a consistent depth, by design
 let lockedHeightPt = 16;   // stored in PDF points so it stays consistent across pages at different scales
 let zoom = 1;
+let sourceFileBaseName = '';
+let sourceFileHandle = null;   // set when the document was opened through the file picker
+let progressFileHandle = null; // lets repeat saves overwrite the same file
 const ZOOM_MIN = 0.5, ZOOM_MAX = 2.5, ZOOM_STEP = 0.1;
 
-let selected = null;       // { pd, mark } | null
+function sanitizeFileName(s) {
+  return (s || '').replace(/[^a-z0-9\-_ ]/gi, '').trim();
+}
+
+let selected = null;       // { pd, marks: [mark, ...] } | null — a selection never spans pages
+
+function selCount() { return selected ? selected.marks.length : 0; }
+function soleMark() { return selected && selected.marks.length === 1 ? selected.marks[0] : null; }
+function isSelected(mark) { return !!selected && selected.marks.indexOf(mark) !== -1; }
+function snapshot(m) { return { x: m.x, y: m.y, w: m.w, h: m.h }; }
 
 let drawing = false;
 let dragMode = null;       // 'draw' | 'move' | 'resize'
@@ -485,16 +547,44 @@ let activePage = null;
 let startPos = null;
 let tempMark = null;
 let moveOrig = null;
+let marqueeRect = null;
+let lastActivePd = null;
 let resizeOrig = null;
 let resizeHandle = null;
 
 const HANDLE_RADIUS = 16;
 const HANDLE_SIZE = 9;
-const DEPTH_PRESETS = [8, 12, 16, 22, 30, 40];
+const DEFAULT_DEPTH_PRESETS = [8, 12, 16, 22, 30, 40];
+const DEPTH_STORAGE_KEY = 'erasure.depthSettings';
+let depthPresets = DEFAULT_DEPTH_PRESETS.slice();
+
+function loadDepthSettings() {
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem(DEPTH_STORAGE_KEY) || 'null'); } catch (e) { saved = null; }
+  if (!saved) return;
+  const custom = Array.isArray(saved.presets) ? saved.presets : [];
+  const merged = new Set(DEFAULT_DEPTH_PRESETS);
+  custom.forEach(pt => {
+    const n = Math.round(Number(pt));
+    if (isFinite(n) && n >= 4 && n <= 200) merged.add(n);
+  });
+  depthPresets = [...merged].sort((a, b) => a - b);
+  const sel = Math.round(Number(saved.selected));
+  if (isFinite(sel) && sel >= 4 && sel <= 200) lockedHeightPt = sel;
+}
+
+function saveDepthSettings() {
+  try {
+    localStorage.setItem(DEPTH_STORAGE_KEY, JSON.stringify({
+      presets: depthPresets.filter(pt => !DEFAULT_DEPTH_PRESETS.includes(pt)),
+      selected: lockedHeightPt
+    }));
+  } catch (e) { /* storage unavailable or full — presets just won't persist */ }
+}
 
 function buildDepthPanel() {
   depthPresetList.innerHTML = '';
-  DEPTH_PRESETS.forEach(pt => {
+  depthPresets.forEach(pt => {
     const row = document.createElement('div');
     row.className = 'depth-row';
     row.setAttribute('role', 'option');
@@ -536,7 +626,13 @@ document.addEventListener('pointerdown', e => {
 function applyCustomDepth() {
   const val = Math.round(parseFloat(customDepthInput.value));
   if (!isFinite(val) || val <= 0) return;
-  choosePreset(Math.min(200, Math.max(4, val)));
+  const pt = Math.min(200, Math.max(4, val));
+  if (!depthPresets.includes(pt)) {
+    depthPresets.push(pt);
+    depthPresets.sort((a, b) => a - b);
+    buildDepthPanel();
+  }
+  choosePreset(pt);
   closeDepthPanel();
 }
 customDepthApply.addEventListener('click', applyCustomDepth);
@@ -549,17 +645,21 @@ customDepthInput.addEventListener('pointerdown', e => e.stopPropagation());
 function choosePreset(pt) {
   lockedHeightPt = pt;
   updateDepthUI();
+  saveDepthSettings();
   closeDepthPanel();
 
   if (selected) {
-    const m = selected.mark;
-    const before = { x: m.x, y: m.y, w: m.w, h: m.h };
-    const cy = m.y + m.h / 2;
+    const changes = [];
     const newH = pt * selected.pd.renderScale;
-    m.h = newH;
-    m.y = cy - newH / 2;
-    if (m.y !== before.y || m.h !== before.h) {
-      undoStack.push({ type: 'resize', pageIndex: pagesData.indexOf(selected.pd), mark: m, before });
+    selected.marks.forEach(m => {
+      const before = snapshot(m);
+      const cy = m.y + m.h / 2;
+      m.h = newH;
+      m.y = cy - newH / 2;
+      if (m.y !== before.y || m.h !== before.h) changes.push({ mark: m, before });
+    });
+    if (changes.length) {
+      undoStack.push({ type: 'batch', pageIndex: pagesData.indexOf(selected.pd), changes });
       refreshButtons();
     }
     redraw(selected.pd);
@@ -577,12 +677,37 @@ function updateDepthUI() {
   depthBtnLabel.textContent = matched ? `${lockedHeightPt} pt` : `${lockedHeightPt} pt (custom)`;
 }
 
+loadDepthSettings();
 buildDepthPanel();
 updateDepthUI();
 
-fileBtn.addEventListener('click', () => fileInput.click());
-dropBtn.addEventListener('click', () => fileInput.click());
-fileInput.addEventListener('change', e => { if (e.target.files[0]) loadFile(e.target.files[0]); });
+async function pickDocument() {
+  if (!window.showOpenFilePicker) return fileInput.click();
+  let handle;
+  try {
+    [handle] = await window.showOpenFilePicker({
+      id: 'erasure-save',
+      multiple: false,
+      types: [{ description: 'PDF or text', accept: { 'application/pdf': ['.pdf'], 'text/plain': ['.txt'] } }]
+    });
+  } catch (err) {
+    if (err && err.name === 'AbortError') return;
+    return fileInput.click();
+  }
+  sourceFileHandle = handle;
+  progressFileHandle = null;
+  loadFile(await handle.getFile());
+}
+
+fileBtn.addEventListener('click', pickDocument);
+dropBtn.addEventListener('click', pickDocument);
+fileInput.addEventListener('change', e => {
+  if (e.target.files[0]) {
+    sourceFileHandle = null;
+    progressFileHandle = null;
+    loadFile(e.target.files[0]);
+  }
+});
 
 ['dragover','dragenter'].forEach(evt => document.body.addEventListener(evt, e => {
   e.preventDefault(); dropzone.classList.add('drag');
@@ -592,7 +717,11 @@ fileInput.addEventListener('change', e => { if (e.target.files[0]) loadFile(e.ta
 }));
 document.body.addEventListener('drop', e => {
   const f = e.dataTransfer.files && e.dataTransfer.files[0];
-  if (f) loadFile(f);
+  if (f) {
+    sourceFileHandle = null;
+    progressFileHandle = null;
+    loadFile(f);
+  }
 });
 
 function setActiveColorControl(el) {
@@ -604,14 +733,20 @@ document.querySelectorAll('.swatch').forEach(sw => {
   sw.addEventListener('click', () => {
     setActiveColorControl(sw);
     currentColor = sw.dataset.color;
-    if (selected) { selected.mark.color = currentColor; redraw(selected.pd); }
+    applyColorToSelection();
   });
 });
 customColor.addEventListener('input', () => {
   setActiveColorControl(customColor);
   currentColor = customColor.value;
-  if (selected) { selected.mark.color = currentColor; redraw(selected.pd); }
+  applyColorToSelection();
 });
+
+function applyColorToSelection() {
+  if (!selected) return;
+  selected.marks.forEach(m => { m.color = currentColor; });
+  redraw(selected.pd);
+}
 
 function setPeeking(on) {
   if (peeking === on) return;
@@ -672,9 +807,16 @@ window.addEventListener('keydown', e => {
   if (document.activeElement === titleInput || document.activeElement === customColor) return;
   if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); return; }
 
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'a') {
+    const pd = selected ? selected.pd : (lastActivePd || pagesData.find(p => p.marks.length));
+    if (pd && pd.marks.length) { e.preventDefault(); setSelection(pd, pd.marks.slice()); }
+    return;
+  }
+
   if (e.key === 'Escape') { deselect(); return; }
   if (!selected) return;
-  const { pd, mark } = selected;
+  const pd = selected.pd;
+  const marks = selected.marks;
 
   if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'd') {
     e.preventDefault();
@@ -684,10 +826,14 @@ window.addEventListener('keydown', e => {
 
   if (e.key === 'Delete' || e.key === 'Backspace') {
     e.preventDefault();
-    const idx = pd.marks.indexOf(mark);
-    if (idx !== -1) {
-      pd.marks.splice(idx, 1);
-      undoStack.push({ type: 'remove', pageIndex: pagesData.indexOf(pd), mark, index: idx });
+    const removed = [];
+    marks.forEach(mark => {
+      const idx = pd.marks.indexOf(mark);
+      if (idx !== -1) removed.push({ mark, index: idx });
+    });
+    if (removed.length) {
+      removed.sort((a, b) => b.index - a.index).forEach(r => pd.marks.splice(r.index, 1));
+      undoStack.push({ type: 'removeMany', pageIndex: pagesData.indexOf(pd), removed });
       selected = null;
       redraw(pd);
       refreshButtons();
@@ -704,22 +850,33 @@ window.addEventListener('keydown', e => {
   else return;
 
   e.preventDefault();
-  const before = { x: mark.x, y: mark.y };
-  mark.x += dx; mark.y += dy;
-  undoStack.push({ type: 'move', pageIndex: pagesData.indexOf(pd), mark, before });
+  const changes = marks.map(m => ({ mark: m, before: snapshot(m) }));
+  marks.forEach(m => { m.x += dx; m.y += dy; });
+  undoStack.push({ type: 'batch', pageIndex: pagesData.indexOf(pd), changes });
   redraw(pd);
   refreshButtons();
 });
 
 /* ---------- loading documents ---------- */
 
-function loadFile(file) {
+async function loadFile(file) {
   const name = (file.name || '').toLowerCase();
   const isTxt = name.endsWith('.txt') || file.type === 'text/plain';
   const isPdf = name.endsWith('.pdf') || file.type === 'application/pdf';
-  if (isTxt) return loadTxt(file);
-  if (isPdf) return loadPdf(file);
-  alert('Please choose a PDF or a plain text (.txt) file.');
+  if (!isTxt && !isPdf) {
+    alert('Please choose a PDF or a plain text (.txt) file.');
+    return;
+  }
+  sourceFileBaseName = (file.name || '').replace(/\.[^.]+$/, '');
+  resumeBtn.style.display = 'none';
+  await (isTxt ? loadTxt(file) : loadPdf(file));
+
+  // A session saved without a file handle can still be restored once the same file is reopened.
+  if (pendingSession && !pendingSession.fileHandle && pendingSession.baseName === sourceFileBaseName && pagesData.length) {
+    applyProgress(pendingSession.progress);
+  }
+  pendingSession = null;
+  persistSession();
 }
 
 function resetWorkspace() {
@@ -761,14 +918,9 @@ function createPageShell(viewportPt, renderScale, pageNum, totalPages) {
 
   const chrome = document.createElement('div');
   chrome.className = 'page-chrome';
-  const clearBtn = document.createElement('button');
-  clearBtn.className = 'page-clear';
-  clearBtn.type = 'button';
-  clearBtn.textContent = 'clear page';
   const numTag = document.createElement('span');
   numTag.className = 'page-num';
   numTag.textContent = `${pageNum} / ${totalPages}`;
-  chrome.appendChild(clearBtn);
   chrome.appendChild(numTag);
 
   pageWrap.appendChild(canvas);
@@ -785,14 +937,6 @@ function createPageShell(viewportPt, renderScale, pageNum, totalPages) {
     renderScale,
     viewportPt: { width: viewportPt.width, height: viewportPt.height }
   };
-
-  clearBtn.addEventListener('click', () => {
-    if (selected && selected.pd === pd) selected = null;
-    pd.marks = [];
-    undoStack = undoStack.filter(a => a.pageIndex !== pagesData.indexOf(pd));
-    redraw(pd);
-    refreshButtons();
-  });
 
   return { canvas, overlay, ctx: canvas.getContext('2d'), pd };
 }
@@ -911,6 +1055,111 @@ async function loadTxt(file) {
   }
 }
 
+/* ---------- session auto-restore (survives a page reload) ---------- */
+
+const DB_NAME = 'erasure-session';
+const DB_STORE = 'session';
+let pendingSession = null;
+let persistTimer = null;
+
+function openDb() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onupgradeneeded = () => req.result.createObjectStore(DB_STORE);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function dbPut(key, value) {
+  const db = await openDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(DB_STORE, 'readwrite');
+    tx.objectStore(DB_STORE).put(value, key);
+    tx.oncomplete = resolve;
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function dbGet(key) {
+  const db = await openDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(DB_STORE, 'readonly');
+    const req = tx.objectStore(DB_STORE).get(key);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+function persistSession() {
+  if (!pagesData.length) return;
+  clearTimeout(persistTimer);
+  persistTimer = setTimeout(async () => {
+    const record = {
+      baseName: sourceFileBaseName,
+      progress: buildProgressPayload(),
+      fileHandle: sourceFileHandle,
+      progressHandle: progressFileHandle
+    };
+    try {
+      await dbPut('last', record);
+    } catch (err) {
+      // Handles aren't storable in every browser — keep the marks at least.
+      try { await dbPut('last', { ...record, fileHandle: null, progressHandle: null }); } catch (e) {}
+    }
+  }, 400);
+}
+
+async function restoreSession() {
+  let record = null;
+  try { record = await dbGet('last'); } catch (err) { return; }
+  if (!record || !record.progress || pagesData.length) return;
+
+  pendingSession = record;
+  if (record.fileHandle) {
+    const perm = record.fileHandle.queryPermission
+      ? await record.fileHandle.queryPermission({ mode: 'read' })
+      : 'granted';
+    if (perm === 'granted') return resumeSession();
+  }
+  showResumePrompt(record);
+}
+
+function showResumePrompt(record) {
+  const label = record.baseName ? `“${record.baseName}”` : 'your last document';
+  resumeBtn.textContent = record.fileHandle ? `Reopen ${label}` : `Restore marks for ${label}`;
+  resumeBtn.style.display = 'inline-block';
+  statusEl.textContent = record.fileHandle
+    ? 'Your last session is still here — reopen it to pick up where you left off.'
+    : 'Marks from your last session are saved. Reopen the same file to restore them.';
+}
+
+async function resumeSession() {
+  const record = pendingSession;
+  if (!record) return;
+  resumeBtn.style.display = 'none';
+
+  if (!record.fileHandle) return fileInput.click();
+
+  if (record.fileHandle.requestPermission) {
+    const perm = await record.fileHandle.requestPermission({ mode: 'read' });
+    if (perm !== 'granted') return showResumePrompt(record);
+  }
+  try {
+    const file = await record.fileHandle.getFile();
+    sourceFileHandle = record.fileHandle;
+    progressFileHandle = record.progressHandle || null;
+    await loadFile(file);
+    applyProgress(record.progress);
+  } catch (err) {
+    console.error(err);
+    showResumePrompt(record);
+  }
+}
+
+resumeBtn.addEventListener('click', resumeSession);
+restoreSession();
+
 function getPos(evt, canvas) {
   const rect = canvas.getBoundingClientRect();
   const scaleX = canvas.width / rect.width;
@@ -988,11 +1237,24 @@ function applyResize(mark, key, orig, pos, start) {
 
 /* ---------- selection ---------- */
 
-function selectMark(pd, mark) {
+function setSelection(pd, marks) {
   const prevPd = selected ? selected.pd : null;
-  selected = { pd, mark };
+  selected = marks.length ? { pd, marks: marks.slice() } : null;
   if (prevPd && prevPd !== pd) redraw(prevPd);
   redraw(pd);
+  refreshButtons();
+}
+
+function selectMark(pd, mark) {
+  setSelection(pd, [mark]);
+}
+
+function toggleInSelection(pd, mark) {
+  if (!selected || selected.pd !== pd) return selectMark(pd, mark);
+  const idx = selected.marks.indexOf(mark);
+  const marks = selected.marks.slice();
+  if (idx === -1) marks.push(mark); else marks.splice(idx, 1);
+  setSelection(pd, marks);
 }
 
 function deselect() {
@@ -1000,7 +1262,64 @@ function deselect() {
   const pd = selected.pd;
   selected = null;
   redraw(pd);
+  refreshButtons();
 }
+
+function selectionBounds() {
+  const ms = selected.marks;
+  const left = Math.min(...ms.map(m => m.x));
+  const right = Math.max(...ms.map(m => m.x + m.w));
+  const top = Math.min(...ms.map(m => m.y));
+  const bottom = Math.max(...ms.map(m => m.y + m.h));
+  return { left, right, top, bottom };
+}
+
+function arrange(fn) {
+  if (selCount() < 2) return;
+  const pd = selected.pd;
+  const marks = selected.marks;
+  const changes = marks.map(m => ({ mark: m, before: snapshot(m) }));
+  fn(marks, selectionBounds());
+  const moved = changes.some(c =>
+    c.mark.x !== c.before.x || c.mark.y !== c.before.y ||
+    c.mark.w !== c.before.w || c.mark.h !== c.before.h);
+  if (moved) {
+    undoStack.push({ type: 'batch', pageIndex: pagesData.indexOf(pd), changes });
+    redraw(pd);
+    refreshButtons();
+  }
+}
+
+function distribute(marks, startKey, sizeKey) {
+  const sorted = marks.slice().sort((a, b) => (a[startKey] + a[sizeKey] / 2) - (b[startKey] + b[sizeKey] / 2));
+  const first = sorted[0], last = sorted[sorted.length - 1];
+  const span = (last[startKey] + last[sizeKey]) - first[startKey];
+  const totalSize = sorted.reduce((sum, m) => sum + m[sizeKey], 0);
+  const gap = (span - totalSize) / (sorted.length - 1);
+  let cursor = first[startKey];
+  sorted.forEach(m => { m[startKey] = cursor; cursor += m[sizeKey] + gap; });
+}
+
+const ARRANGE_OPS = {
+  alignLeft: (ms, b) => ms.forEach(m => { m.x = b.left; }),
+  alignCenterH: (ms, b) => { const c = (b.left + b.right) / 2; ms.forEach(m => { m.x = c - m.w / 2; }); },
+  alignRight: (ms, b) => ms.forEach(m => { m.x = b.right - m.w; }),
+  alignTop: (ms, b) => ms.forEach(m => { m.y = b.top; }),
+  alignMiddleV: (ms, b) => { const c = (b.top + b.bottom) / 2; ms.forEach(m => { m.y = c - m.h / 2; }); },
+  alignBottom: (ms, b) => ms.forEach(m => { m.y = b.bottom - m.h; }),
+  distributeV: ms => distribute(ms, 'y', 'h'),
+  distributeH: ms => distribute(ms, 'x', 'w'),
+  matchWidth: ms => { const w = Math.max(...ms.map(m => m.w)); ms.forEach(m => { m.w = w; }); },
+  stackLines: (ms, b) => {
+    const w = Math.max(...ms.map(m => m.w));
+    ms.forEach(m => { m.x = b.left; m.w = w; });
+    distribute(ms, 'y', 'h');
+  }
+};
+
+document.querySelectorAll('[data-arrange]').forEach(btn => {
+  btn.addEventListener('click', () => arrange(ARRANGE_OPS[btn.dataset.arrange]));
+});
 
 function applyColorToAll() {
   if (!pagesData.length) return;
@@ -1044,13 +1363,15 @@ function applySizeToAll() {
 
 function duplicateSelected() {
   if (!selected) return;
-  const { pd, mark } = selected;
+  const pd = selected.pd;
   const offsetPx = 8 * pd.renderScale; // ~8pt, so the offset reads the same regardless of page scale
-  const clone = { x: mark.x + offsetPx, y: mark.y + offsetPx, w: mark.w, h: mark.h, color: mark.color };
-  pd.marks.push(clone);
-  undoStack.push({ type: 'add', pageIndex: pagesData.indexOf(pd), mark: clone });
-  selectMark(pd, clone);
-  refreshButtons();
+  const clones = selected.marks.map(mark => {
+    const clone = { x: mark.x + offsetPx, y: mark.y + offsetPx, w: mark.w, h: mark.h, color: mark.color };
+    pd.marks.push(clone);
+    return clone;
+  });
+  undoStack.push({ type: 'addMany', pageIndex: pagesData.indexOf(pd), marks: clones });
+  setSelection(pd, clones);
 }
 
 /* ---------- pointer interaction ---------- */
@@ -1061,24 +1382,43 @@ function attachPointerHandlers(overlay, pd) {
     overlay.setPointerCapture(e.pointerId);
     const pos = getPos(e, overlay);
     activePage = pd;
+    lastActivePd = pd;
     startPos = pos;
 
-    if (selected && selected.pd === pd) {
-      const handle = handleAt(selected.mark, pos);
+    const single = selected && selected.pd === pd ? soleMark() : null;
+    if (single) {
+      const handle = handleAt(single, pos);
       if (handle) {
         dragMode = 'resize';
         resizeHandle = handle;
-        resizeOrig = { x: selected.mark.x, y: selected.mark.y, w: selected.mark.w, h: selected.mark.h };
+        resizeOrig = snapshot(single);
         drawing = true;
         return;
       }
     }
 
     const hit = findMarkAt(pd, pos);
+
+    if (e.shiftKey) {
+      if (hit) toggleInSelection(pd, hit);
+      drawing = false;
+      dragMode = null;
+      activePage = null;
+      return;
+    }
+
+    if (e.altKey) {
+      deselect();
+      dragMode = 'marquee';
+      marqueeRect = { x: pos.x, y: pos.y, w: 0, h: 0 };
+      drawing = true;
+      return;
+    }
+
     if (hit) {
-      selectMark(pd, hit);
+      if (!isSelected(hit) || !selected || selected.pd !== pd) selectMark(pd, hit);
       dragMode = 'move';
-      moveOrig = { x: hit.x, y: hit.y };
+      moveOrig = selected.marks.map(m => ({ mark: m, x: m.x, y: m.y }));
       drawing = true;
       overlay.style.cursor = 'grabbing';
       return;
@@ -1099,23 +1439,27 @@ function attachPointerHandlers(overlay, pd) {
         tempMark.w = pos.x - startPos.x;
         if (!lockHeight) tempMark.h = pos.y - startPos.y;
         redraw(pd, tempMark);
+      } else if (dragMode === 'marquee') {
+        marqueeRect.w = pos.x - startPos.x;
+        marqueeRect.h = pos.y - startPos.y;
+        redraw(pd);
       } else if (dragMode === 'move') {
         const dx = pos.x - startPos.x, dy = pos.y - startPos.y;
-        selected.mark.x = moveOrig.x + dx;
-        selected.mark.y = moveOrig.y + dy;
+        moveOrig.forEach(o => { o.mark.x = o.x + dx; o.mark.y = o.y + dy; });
         redraw(pd);
       } else if (dragMode === 'resize') {
-        applyResize(selected.mark, resizeHandle, resizeOrig, pos, startPos);
+        applyResize(selected.marks[0], resizeHandle, resizeOrig, pos, startPos);
         redraw(pd);
       }
       return;
     }
 
     let cursor = 'crosshair';
-    if (selected && selected.pd === pd) {
-      const h = handleAt(selected.mark, pos);
+    const single = selected && selected.pd === pd ? soleMark() : null;
+    if (single) {
+      const h = handleAt(single, pos);
       if (h) cursor = cursorForHandle(h);
-      else if (pointInRect(pos, selected.mark)) cursor = 'grab';
+      else if (pointInRect(pos, single)) cursor = 'grab';
     }
     if (cursor === 'crosshair' && findMarkAt(pd, pos)) cursor = 'grab';
     overlay.style.cursor = cursor;
@@ -1138,14 +1482,21 @@ function finishStroke(pd) {
       if (!lockHeight) syncLockedHeight(m.h, pd);
       refreshButtons();
     }
+  } else if (dragMode === 'marquee') {
+    const box = normalizeRect(marqueeRect);
+    if (box.w > 2 && box.h > 2) {
+      setSelection(pd, pd.marks.filter(m => rectsIntersect(m, box)));
+    }
   } else if (dragMode === 'move') {
-    const after = { x: selected.mark.x, y: selected.mark.y };
-    if (after.x !== moveOrig.x || after.y !== moveOrig.y) {
-      undoStack.push({ type: 'move', pageIndex: pagesData.indexOf(pd), mark: selected.mark, before: moveOrig });
+    const changes = moveOrig
+      .filter(o => o.mark.x !== o.x || o.mark.y !== o.y)
+      .map(o => ({ mark: o.mark, before: { x: o.x, y: o.y, w: o.mark.w, h: o.mark.h } }));
+    if (changes.length) {
+      undoStack.push({ type: 'batch', pageIndex: pagesData.indexOf(pd), changes });
       refreshButtons();
     }
   } else if (dragMode === 'resize') {
-    const m = selected.mark;
+    const m = selected.marks[0];
     const changed = m.x !== resizeOrig.x || m.y !== resizeOrig.y || m.w !== resizeOrig.w || m.h !== resizeOrig.h;
     if (changed) {
       undoStack.push({ type: 'resize', pageIndex: pagesData.indexOf(pd), mark: m, before: resizeOrig });
@@ -1155,11 +1506,17 @@ function finishStroke(pd) {
   }
 
   tempMark = null;
+  marqueeRect = null;
+  moveOrig = null;
   dragMode = null;
   resizeHandle = null;
   activePage = null;
   pd.overlay.style.cursor = 'crosshair';
   redraw(pd);
+}
+
+function rectsIntersect(m, box) {
+  return m.x < box.x + box.w && m.x + m.w > box.x && m.y < box.y + box.h && m.y + m.h > box.y;
 }
 
 function syncLockedHeight(hPx, pd) {
@@ -1192,6 +1549,27 @@ function drawHandles(ctx, m) {
   ctx.restore();
 }
 
+function drawOutline(ctx, m) {
+  ctx.save();
+  ctx.strokeStyle = '#3d7dc9';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([4, 3]);
+  ctx.strokeRect(m.x - 1, m.y - 1, m.w + 2, m.h + 2);
+  ctx.restore();
+}
+
+function drawMarquee(ctx, r) {
+  const box = normalizeRect(r);
+  ctx.save();
+  ctx.strokeStyle = '#3d7dc9';
+  ctx.fillStyle = 'rgba(61,125,201,0.12)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([3, 3]);
+  ctx.fillRect(box.x, box.y, box.w, box.h);
+  ctx.strokeRect(box.x, box.y, box.w, box.h);
+  ctx.restore();
+}
+
 function redraw(pd, preview) {
   const ctx = pd.octx;
   ctx.clearRect(0, 0, pd.overlay.width, pd.overlay.height);
@@ -1199,7 +1577,11 @@ function redraw(pd, preview) {
   pd.marks.forEach(m => drawRect(ctx, m));
   if (preview) drawRect(ctx, preview);
   ctx.globalAlpha = 1;
-  if (selected && selected.pd === pd) drawHandles(ctx, selected.mark);
+  if (selected && selected.pd === pd) {
+    if (selected.marks.length === 1) drawHandles(ctx, selected.marks[0]);
+    else selected.marks.forEach(m => drawOutline(ctx, m));
+  }
+  if (marqueeRect && activePage === pd) drawMarquee(ctx, marqueeRect);
 }
 
 /* ---------- undo ---------- */
@@ -1229,10 +1611,25 @@ function undo() {
   if (action.type === 'add') {
     const idx = pd.marks.indexOf(action.mark);
     if (idx !== -1) pd.marks.splice(idx, 1);
-    if (selected && selected.mark === action.mark) selected = null;
+    if (isSelected(action.mark)) selected = null;
+  } else if (action.type === 'addMany') {
+    action.marks.forEach(m => {
+      const idx = pd.marks.indexOf(m);
+      if (idx !== -1) pd.marks.splice(idx, 1);
+    });
+    selected = null;
   } else if (action.type === 'remove') {
     pd.marks.splice(Math.min(action.index, pd.marks.length), 0, action.mark);
-    selected = { pd, mark: action.mark };
+    selected = { pd, marks: [action.mark] };
+  } else if (action.type === 'removeMany') {
+    action.removed.slice().sort((a, b) => a.index - b.index)
+      .forEach(r => pd.marks.splice(Math.min(r.index, pd.marks.length), 0, r.mark));
+    selected = { pd, marks: action.removed.map(r => r.mark) };
+  } else if (action.type === 'batch') {
+    action.changes.forEach(c => {
+      c.mark.x = c.before.x; c.mark.y = c.before.y;
+      c.mark.w = c.before.w; c.mark.h = c.before.h;
+    });
   } else if (action.type === 'move') {
     action.mark.x = action.before.x;
     action.mark.y = action.before.y;
@@ -1250,11 +1647,49 @@ function undo() {
 function refreshButtons() {
   undoBtn.disabled = undoStack.length === 0;
   clearAllBtn.disabled = pagesData.every(pd => pd.marks.length === 0);
+  const multi = selCount() >= 2;
+  document.querySelectorAll('[data-arrange]').forEach(b => { b.disabled = !multi; });
+  arrangeHint.textContent = multi
+    ? `${selCount()} blocks selected.`
+    : 'Shift-click blocks to select several, or Alt-drag a box around them.';
+  persistSession();
 }
 
 /* ---------- saving files from inside the page ---------- */
 
-async function saveFile(filename, data) {
+async function ensureWritable(handle) {
+  if (!handle.queryPermission) return true;
+  const opts = { mode: 'readwrite' };
+  if (await handle.queryPermission(opts) === 'granted') return true;
+  return await handle.requestPermission(opts) === 'granted';
+}
+
+async function writeHandle(handle, blob) {
+  const writable = await handle.createWritable();
+  await writable.write(blob);
+  await writable.close();
+}
+
+// Returns the FileSystemFileHandle when the browser let us write in place, otherwise true/false.
+async function saveFile(filename, data, opts = {}) {
+  const blob = data instanceof Blob ? data : new Blob([data]);
+
+  if (window.showSaveFilePicker) {
+    try {
+      const handle = await window.showSaveFilePicker({
+        suggestedName: filename,
+        id: 'erasure-save',
+        startIn: sourceFileHandle || 'documents',
+        types: opts.types
+      });
+      await writeHandle(handle, blob);
+      return handle;
+    } catch (err) {
+      if (err && err.name === 'AbortError') return false;
+      console.warn('showSaveFilePicker failed, trying fallback', err);
+    }
+  }
+
   let downloads = null;
   try {
     if (window.claude && window.claude.use) downloads = await window.claude.use('downloads');
@@ -1271,7 +1706,6 @@ async function saveFile(filename, data) {
     }
   }
   try {
-    const blob = data instanceof Blob ? data : new Blob([data]);
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -1290,15 +1724,15 @@ async function saveFile(filename, data) {
 
 /* ---------- save / resume progress ---------- */
 
-async function saveProgress() {
-  if (!pagesData.length) return;
-  const payload = {
+function buildProgressPayload() {
+  return {
     kind: 'erasure-progress',
     version: 2,
     savedAt: new Date().toISOString(),
     settings: {
       color: currentColor,
-      depthPt: lockedHeightPt
+      depthPt: lockedHeightPt,
+      customDepthPresets: depthPresets.filter(pt => !DEFAULT_DEPTH_PRESETS.includes(pt))
     },
     pages: pagesData.map(pd => ({
       width: Math.round(pd.viewportPt.width * 100) / 100,
@@ -1312,9 +1746,30 @@ async function saveProgress() {
       }))
     }))
   };
-  const name = (titleInput.value.trim() || 'erasure-progress').replace(/[^a-z0-9\-_ ]/gi, '').trim() || 'erasure-progress';
+}
+
+async function saveProgress() {
+  if (!pagesData.length) return;
+  const payload = buildProgressPayload();
+  const fallback = sanitizeFileName(sourceFileBaseName) || 'erasure-progress';
+  const name = sanitizeFileName(titleInput.value) || fallback;
   const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
-  await saveFile(name + '.json', blob);
+
+  if (progressFileHandle && await ensureWritable(progressFileHandle)) {
+    await writeHandle(progressFileHandle, blob);
+    statusEl.textContent = `Progress saved to ${progressFileHandle.name}.`;
+    persistSession();
+    return;
+  }
+
+  const result = await saveFile(name + '.json', blob, {
+    types: [{ description: 'Erasure progress', accept: { 'application/json': ['.json'] } }]
+  });
+  if (result && result.createWritable) {
+    progressFileHandle = result;
+    statusEl.textContent = `Progress saved to ${result.name}.`;
+    persistSession();
+  }
 }
 
 function setCurrentColor(color) {
@@ -1340,10 +1795,20 @@ function applyProgress(data) {
   }
   if (data.settings) {
     if (typeof data.settings.color === 'string') setCurrentColor(data.settings.color);
+    if (Array.isArray(data.settings.customDepthPresets)) {
+      const merged = new Set(depthPresets);
+      data.settings.customDepthPresets.forEach(pt => {
+        const n = Math.round(Number(pt));
+        if (isFinite(n) && n >= 4 && n <= 200) merged.add(n);
+      });
+      depthPresets = [...merged].sort((a, b) => a - b);
+      buildDepthPanel();
+    }
     if (typeof data.settings.depthPt === 'number' && isFinite(data.settings.depthPt)) {
       lockedHeightPt = Math.min(200, Math.max(4, Math.round(data.settings.depthPt)));
-      updateDepthUI();
     }
+    updateDepthUI();
+    saveDepthSettings();
   }
   let mismatched = false;
   let touched = 0;
@@ -1403,9 +1868,11 @@ async function exportPdf() {
       }
       doc.addImage(imgData, 'JPEG', 0, 0, wPt, hPt);
     }
-    const name = (titleInput.value.trim() || 'erasure-poem').replace(/[^a-z0-9\-_ ]/gi, '').trim() || 'erasure-poem';
+    const name = sanitizeFileName(titleInput.value) || 'erasure-poem';
     const blob = doc.output('blob');
-    await saveFile(name + '.pdf', blob);
+    await saveFile(name + '.pdf', blob, {
+      types: [{ description: 'PDF', accept: { 'application/pdf': ['.pdf'] } }]
+    });
   } catch (err) {
     console.error(err);
     alert("Export failed — the document may be too large or unusually structured. Try again with fewer pages.");
