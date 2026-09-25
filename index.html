@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Erasure — turn any document into found poetry</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Courier+Prime:wght@400;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root {
+    --paper: #efe7d6;
+    --paper-edge: #ddd0b3;
+    --ink: #201b16;
+    --ink-soft: #4a4038;
+    --sidebar: #201b16;
+    --sidebar-text: #ece4d6;
+    --sidebar-muted: #a89d8c;
+    --accent: #a23e2d;
+    --accent-hi: #c65138;
+    --select: #3d7dc9;
+    --desk: #cabfa9;
+    --line: rgba(32,27,22,0.14);
+    --shadow: rgba(20,15,10,0.35);
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --desk: #14110d;
+      --line: rgba(236,228,214,0.12);
+      --shadow: rgba(0,0,0,0.6);
+    }
+  }
+  :root[data-theme="dark"] {
+    --desk: #14110d;
+    --line: rgba(236,228,214,0.12);
+    --shadow: rgba(0,0,0,0.6);
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: var(--desk);
+    color: var(--ink);
+    font-family: "Source Serif 4", Georgia, serif;
+    display: flex;
+    min-height: 100%;
+    overflow: hidden;
+  }
+
+  /* ---------- Sidebar ---------- */
+  #sidebar {
+    flex: 0 0 260px;
+    background: var(--sidebar);
+    color: var(--sidebar-text);
+    padding: 22px 20px calc(20px + env(safe-area-inset-bottom, 0px));
+    padding-top: calc(22px + env(safe-area-inset-top, 0px));
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    overflow-y: auto;
+  }
+  #sidebar h1 {
+    font-family: "Special Elite", "Courier New", monospace;
+    font-size: 1.35rem;
+    font-weight: 400;
+    margin: 0 0 2px;
+    letter-spacing: 0.5px;
+  }
+  #sidebar .tagline {
+    color: var(--sidebar-muted);
+    font-size: 0.86rem;
+    line-height: 1.45;
+    margin: 0;
+  }
+  .section { border-top: 1px solid rgba(236,228,214,0.14); padding-top: 16px; }
+  .section-label {
+    font-family: "Special Elite", monospace;
+    font-size: 0.68rem;
+    color: var(--sidebar-muted);
+    letter-spacing: 0.06em;
+    margin: 0 0 10px;
+  }
+
+  #fileBtn, .btn {
+    font-family: "Source Serif 4", serif;
+    font-size: 0.92rem;
+    background: transparent;
+    color: var(--sidebar-text);
+    border: 1px solid rgba(236,228,214,0.35);
+    border-radius: 3px;
+    padding: 9px 12px;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  #fileBtn:hover, .btn:hover { background: rgba(236,228,214,0.08); border-color: rgba(236,228,214,0.6); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn:focus-visible, #fileBtn:focus-visible, button:focus-visible, input:focus-visible {
+    outline: 2px solid var(--select); outline-offset: 2px;
+  }
+  #fileInput, #progressInput { display: none; }
+
+  .btn-row { display: flex; gap: 8px; }
+  .btn-row .btn { flex: 1; }
+
+  .swatch-row { display: flex; gap: 8px; align-items: center; }
+  .swatch {
+    width: 30px; height: 30px; border-radius: 50%;
+    border: 2px solid rgba(236,228,214,0.3);
+    cursor: pointer;
+    padding: 0;
+  }
+  .swatch.active { border-color: var(--accent-hi); box-shadow: 0 0 0 2px var(--accent-hi); }
+  #customColor {
+    width: 30px; height: 30px; border: none; background: none; padding: 0; cursor: pointer;
+    border-radius: 50%; overflow: hidden;
+  }
+  #customColor::-webkit-color-swatch-wrapper { padding: 0; border-radius: 50%; }
+  #customColor::-webkit-color-swatch { border: 2px solid rgba(236,228,214,0.3); border-radius: 50%; }
+
+  .check-row { display: flex; align-items: center; gap: 8px; font-size: 0.86rem; color: var(--sidebar-text); cursor: pointer; }
+  .check-row input { accent-color: var(--accent); width: 16px; height: 16px; }
+
+  .hint { font-size: 0.76rem; color: var(--sidebar-muted); line-height: 1.45; margin: 8px 0 0; }
+
+  #titleInput {
+    width: 100%;
+    background: rgba(236,228,214,0.06);
+    border: 1px solid rgba(236,228,214,0.3);
+    border-radius: 3px;
+    color: var(--sidebar-text);
+    font-family: "Source Serif 4", serif;
+    font-size: 0.9rem;
+    padding: 8px 10px;
+  }
+
+  #exportBtn {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    font-family: "Special Elite", monospace;
+    font-size: 0.85rem;
+    letter-spacing: 0.03em;
+    padding: 12px;
+  }
+  #exportBtn:hover:not(:disabled) { background: var(--accent-hi); border-color: var(--accent-hi); }
+
+  #status { font-size: 0.78rem; color: var(--sidebar-muted); line-height: 1.4; min-height: 1.2em; }
+
+  /* ---------- Main viewer ---------- */
+  #main {
+    flex: 1;
+    overflow-y: auto;
+    padding: 40px 24px calc(60px + env(safe-area-inset-bottom, 0px));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 34px;
+  }
+
+  #dropzone {
+    max-width: 480px;
+    margin-top: 10vh;
+    text-align: center;
+    color: var(--ink-soft);
+    border: 1.5px dashed var(--line);
+    border-radius: 6px;
+    padding: 48px 36px;
+    background: var(--paper);
+  }
+  #dropzone.drag { border-color: var(--accent); background: var(--paper-edge); }
+  #dropzone h2 {
+    font-family: "Special Elite", monospace;
+    font-weight: 400;
+    font-size: 1.05rem;
+    margin: 0 0 10px;
+    color: var(--ink);
+  }
+  #dropzone p { font-size: 0.92rem; line-height: 1.6; margin: 0 0 18px; }
+  #dropzone .btn {
+    display: inline-block; width: auto;
+    background: var(--ink); color: var(--paper); border-color: var(--ink);
+  }
+  #dropzone .btn:hover { background: var(--ink-soft); }
+
+  .page {
+    position: relative;
+    background: var(--paper);
+    box-shadow: 0 10px 30px var(--shadow);
+    max-width: 100%;
+  }
+  .page canvas { display: block; position: absolute; top: 0; left: 0; max-width: 100%; height: auto; }
+  .page .pdf-layer { position: relative; }
+  .page .mark-layer { touch-action: none; cursor: crosshair; }
+
+  .page-chrome { position: absolute; top: 8px; right: 8px; display: flex; gap: 6px; z-index: 5; }
+  .page-num {
+    font-family: "Special Elite", monospace;
+    font-size: 0.68rem;
+    color: var(--ink-soft);
+    background: rgba(239,231,214,0.9);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 3px 7px;
+    align-self: center;
+  }
+  .page-clear {
+    font-family: "Special Elite", monospace;
+    font-size: 0.65rem;
+    background: rgba(239,231,214,0.9);
+    border: 1px solid var(--line);
+    color: var(--ink-soft);
+    border-radius: 3px;
+    padding: 3px 8px;
+    cursor: pointer;
+  }
+  .page-clear:hover { background: #fff; color: var(--accent); border-color: var(--accent); }
+
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.25); border-radius: 6px; }
+
+  @media (max-width: 720px) {
+    body { flex-direction: column; overflow: auto; height: auto; }
+    #sidebar { flex: none; width: 100%; }
+    #main { overflow: visible; padding-top: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<aside id="sidebar">
+  <div>
+    <h1>Erasure</h1>
+    <p class="tagline">Load a PDF or a plain text file, drag out blocks over the words you don't want, and export what's left as a poem.</p>
+  </div>
+
+  <div class="section">
+    <p class="section-label">document</p>
+    <button id="fileBtn" type="button">Choose a PDF or .txt…</button>
+    <input id="fileInput" type="file" accept="application/pdf,.pdf,text/plain,.txt">
+    <p id="status" style="margin-top:10px;"></p>
+  </div>
+
+  <div class="section">
+    <p class="section-label">mark color</p>
+    <div class="swatch-row">
+      <button class="swatch active" data-color="#14100d" style="background:#14100d" type="button" aria-label="Black"></button>
+      <button class="swatch" data-color="#f7f3e8" style="background:#f7f3e8" type="button" aria-label="White"></button>
+      <input id="customColor" type="color" value="#14100d" aria-label="Custom color">
+    </div>
+  </div>
+
+  <div class="section">
+    <label class="check-row">
+      <input id="lockHeightToggle" type="checkbox" checked>
+      Keep every line the same depth
+    </label>
+    <p class="hint">New blocks match the last height you settled on. Select a block and drag its side handles to fine-tune that height — everything after it will follow. Uncheck to resize any block freely on all sides.</p>
+  </div>
+
+  <div class="section">
+    <label class="check-row">
+      <input id="peekToggle" type="checkbox">
+      Peek through marks
+    </label>
+  </div>
+
+  <div class="section btn-row">
+    <button id="undoBtn" class="btn" type="button" disabled>Undo</button>
+    <button id="clearAllBtn" class="btn" type="button" disabled>Clear all</button>
+  </div>
+
+  <div class="section">
+    <p class="section-label">save &amp; resume</p>
+    <div class="btn-row">
+      <button id="saveProgressBtn" class="btn" type="button" disabled>Save progress</button>
+      <button id="loadProgressBtn" class="btn" type="button">Load progress…</button>
+    </div>
+    <input id="progressInput" type="file" accept="application/json,.json">
+    <p class="hint">Saves only your redaction positions, not the document. To resume, reopen the same file first, then load its saved progress.</p>
+  </div>
+
+  <div class="section" style="margin-top:auto;">
+    <p class="section-label">export</p>
+    <input id="titleInput" type="text" placeholder="erasure-poem" maxlength="80">
+    <div style="height:10px;"></div>
+    <button id="exportBtn" class="btn" type="button" disabled>Export as PDF</button>
+  </div>
+</aside>
+
+<main id="main">
+  <div id="dropzone">
+    <h2>Drop a PDF or .txt file here</h2>
+    <p>Nothing you mark ever leaves your browser. Drag out a block over the words you want gone — it stays selected, so you can drag its edges to resize or nudge it with the arrow keys. Click any existing block to select it again. Backspace deletes it. Export bakes everything in permanently.</p>
+    <button class="btn" id="dropBtn" type="button">Choose a file…</button>
+  </div>
+  <div id="pages"></div>
+</main>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+const fileInput = document.getElementById('fileInput');
+const fileBtn = document.getElementById('fileBtn');
+const dropBtn = document.getElementById('dropBtn');
+const dropzone = document.getElementById('dropzone');
+const mainEl = document.getElementById('main');
+const pagesContainer = document.getElementById('pages');
+const statusEl = document.getElementById('status');
+const undoBtn = document.getElementById('undoBtn');
+const clearAllBtn = document.getElementById('clearAllBtn');
+const exportBtn = document.getElementById('exportBtn');
+const peekToggle = document.getElementById('peekToggle');
+const titleInput = document.getElementById('titleInput');
+const customColor = document.getElementById('customColor');
+const lockHeightToggle = document.getElementById('lockHeightToggle');
+const saveProgressBtn = document.getElementById('saveProgressBtn');
+const loadProgressBtn = document.getElementById('loadProgressBtn');
+const progressInput = document.getElementById('progressInput');
+
+let pagesData = [];        // {pageNum, canvas, overlay, octx, marks:[], renderScale, viewportPt}
+let undoStack = [];        // {type:'add'|'remove'|'move'|'resize', pageIndex, mark, ...}
+let currentColor = '#14100d';
+let peeking = false;
+let lockHeight = true;
+let lockedHeightPt = 16;   // stored in PDF points so it stays consistent across pages at different scales
+
+let selected = null;       // { pd, mark } | null
+
+let drawing = false;
+let dragMode = null;       // 'draw' | 'move' | 'resize'
+let activePage = null;
+let startPos = null;
+let tempMark = null;
+let moveOrig = null;
+let resizeOrig = null;
+let resizeHandle = null;
+
+const HANDLE_RADIUS = 16;
+const HANDLE_SIZE = 9;
+
+fileBtn.addEventListener('click', () => fileInput.click());
+dropBtn.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', e => { if (e.target.files[0]) loadFile(e.target.files[0]); });
+
+['dragover','dragenter'].forEach(evt => document.body.addEventListener(evt, e => {
+  e.preventDefault(); dropzone.classList.add('drag');
+}));
+['dragleave','drop'].forEach(evt => document.body.addEventListener(evt, e => {
+  e.preventDefault(); dropzone.classList.remove('drag');
+}));
+document.body.addEventListener('drop', e => {
+  const f = e.dataTransfer.files && e.dataTransfer.files[0];
+  if (f) loadFile(f);
+});
+
+document.querySelectorAll('.swatch').forEach(sw => {
+  sw.addEventListener('click', () => {
+    document.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+    sw.classList.add('active');
+    currentColor = sw.dataset.color;
+    if (selected) { selected.mark.color = currentColor; redraw(selected.pd); }
+  });
+});
+customColor.addEventListener('input', () => {
+  document.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+  currentColor = customColor.value;
+  if (selected) { selected.mark.color = currentColor; redraw(selected.pd); }
+});
+
+lockHeightToggle.addEventListener('change', () => {
+  lockHeight = lockHeightToggle.checked;
+  if (selected) redraw(selected.pd);
+});
+
+peekToggle.addEventListener('change', () => {
+  peeking = peekToggle.checked;
+  pagesData.forEach(pd => redraw(pd));
+});
+
+undoBtn.addEventListener('click', undo);
+clearAllBtn.addEventListener('click', () => {
+  if (!confirm('Clear every mark on every page?')) return;
+  pagesData.forEach(pd => pd.marks = []);
+  undoStack = [];
+  selected = null;
+  pagesData.forEach(pd => redraw(pd));
+  refreshButtons();
+});
+exportBtn.addEventListener('click', exportPdf);
+saveProgressBtn.addEventListener('click', saveProgress);
+loadProgressBtn.addEventListener('click', () => progressInput.click());
+progressInput.addEventListener('change', async e => {
+  const f = e.target.files[0];
+  progressInput.value = '';
+  if (!f) return;
+  try {
+    const text = await f.text();
+    applyProgress(JSON.parse(text));
+  } catch (err) {
+    console.error(err);
+    alert("Couldn't read that progress file.");
+  }
+});
+
+// Clicking the empty desk (not a page) deselects.
+mainEl.addEventListener('pointerdown', e => {
+  if (!e.target.closest('.page')) deselect();
+});
+
+window.addEventListener('keydown', e => {
+  if (document.activeElement === titleInput || document.activeElement === customColor) return;
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); return; }
+
+  if (e.key === 'Escape') { deselect(); return; }
+  if (!selected) return;
+  const { pd, mark } = selected;
+
+  if (e.key === 'Delete' || e.key === 'Backspace') {
+    e.preventDefault();
+    const idx = pd.marks.indexOf(mark);
+    if (idx !== -1) {
+      pd.marks.splice(idx, 1);
+      undoStack.push({ type: 'remove', pageIndex: pagesData.indexOf(pd), mark, index: idx });
+      selected = null;
+      redraw(pd);
+      refreshButtons();
+    }
+    return;
+  }
+
+  const step = e.shiftKey ? 10 : 1;
+  let dx = 0, dy = 0;
+  if (e.key === 'ArrowLeft') dx = -step;
+  else if (e.key === 'ArrowRight') dx = step;
+  else if (e.key === 'ArrowUp') dy = -step;
+  else if (e.key === 'ArrowDown') dy = step;
+  else return;
+
+  e.preventDefault();
+  const before = { x: mark.x, y: mark.y };
+  mark.x += dx; mark.y += dy;
+  undoStack.push({ type: 'move', pageIndex: pagesData.indexOf(pd), mark, before });
+  redraw(pd);
+  refreshButtons();
+});
+
+/* ---------- loading documents ---------- */
+
+function loadFile(file) {
+  const name = (file.name || '').toLowerCase();
+  const isTxt = name.endsWith('.txt') || file.type === 'text/plain';
+  const isPdf = name.endsWith('.pdf') || file.type === 'application/pdf';
+  if (isTxt) return loadTxt(file);
+  if (isPdf) return loadPdf(file);
+  alert('Please choose a PDF or a plain text (.txt) file.');
+}
+
+function resetWorkspace() {
+  dropzone.style.display = 'none';
+  pagesContainer.innerHTML = '';
+  pagesData = [];
+  undoStack = [];
+  selected = null;
+  refreshButtons();
+  exportBtn.disabled = true;
+  saveProgressBtn.disabled = true;
+}
+
+function createPageShell(viewportPt, renderScale, pageNum, totalPages) {
+  const width = viewportPt.width * renderScale;
+  const height = viewportPt.height * renderScale;
+
+  const pageWrap = document.createElement('div');
+  pageWrap.className = 'page';
+  pageWrap.style.width = width + 'px';
+  pageWrap.style.height = height + 'px';
+
+  const canvas = document.createElement('canvas');
+  canvas.className = 'pdf-layer';
+  canvas.width = width;
+  canvas.height = height;
+
+  const overlay = document.createElement('canvas');
+  overlay.className = 'mark-layer';
+  overlay.width = width;
+  overlay.height = height;
+
+  const chrome = document.createElement('div');
+  chrome.className = 'page-chrome';
+  const clearBtn = document.createElement('button');
+  clearBtn.className = 'page-clear';
+  clearBtn.type = 'button';
+  clearBtn.textContent = 'clear page';
+  const numTag = document.createElement('span');
+  numTag.className = 'page-num';
+  numTag.textContent = `${pageNum} / ${totalPages}`;
+  chrome.appendChild(clearBtn);
+  chrome.appendChild(numTag);
+
+  pageWrap.appendChild(canvas);
+  pageWrap.appendChild(overlay);
+  pageWrap.appendChild(chrome);
+  pagesContainer.appendChild(pageWrap);
+
+  const pd = {
+    pageNum,
+    canvas, overlay,
+    octx: overlay.getContext('2d'),
+    marks: [],
+    renderScale,
+    viewportPt: { width: viewportPt.width, height: viewportPt.height }
+  };
+
+  clearBtn.addEventListener('click', () => {
+    if (selected && selected.pd === pd) selected = null;
+    pd.marks = [];
+    undoStack = undoStack.filter(a => a.pageIndex !== pagesData.indexOf(pd));
+    redraw(pd);
+    refreshButtons();
+  });
+
+  return { canvas, overlay, ctx: canvas.getContext('2d'), pd };
+}
+
+async function loadPdf(file) {
+  resetWorkspace();
+  try {
+    const buf = await file.arrayBuffer();
+    const pdfDoc = await pdfjsLib.getDocument({ data: buf }).promise;
+
+    for (let i = 1; i <= pdfDoc.numPages; i++) {
+      statusEl.textContent = `Rendering page ${i} of ${pdfDoc.numPages}…`;
+      const page = await pdfDoc.getPage(i);
+      const viewportPt = page.getViewport({ scale: 1 });
+      const targetWidth = Math.min(1500, Math.max(900, viewportPt.width * 1.8));
+      const renderScale = targetWidth / viewportPt.width;
+      const viewport = page.getViewport({ scale: renderScale });
+
+      const { ctx, overlay, pd } = createPageShell(viewportPt, renderScale, i, pdfDoc.numPages);
+      await page.render({ canvasContext: ctx, viewport }).promise;
+
+      pagesData.push(pd);
+      attachPointerHandlers(overlay, pd);
+    }
+
+    statusEl.textContent = `${pdfDoc.numPages} page${pdfDoc.numPages > 1 ? 's' : ''} loaded. Drag out a block over the words you want gone.`;
+    exportBtn.disabled = false;
+    saveProgressBtn.disabled = false;
+  } catch (err) {
+    console.error(err);
+    statusEl.textContent = "Couldn't read that PDF. Try a different file.";
+    dropzone.style.display = 'block';
+  }
+}
+
+async function loadTxt(file) {
+  resetWorkspace();
+  try {
+    const text = await file.text();
+    statusEl.textContent = 'Typesetting your text file…';
+
+    const viewportPt = { width: 612, height: 792 }; // US Letter, in points
+    const marginPt = 54;
+    const targetWidth = Math.min(1500, Math.max(900, viewportPt.width * 1.8));
+    const renderScale = targetWidth / viewportPt.width;
+    const pageWpx = viewportPt.width * renderScale;
+    const pageHpx = viewportPt.height * renderScale;
+    const marginPx = marginPt * renderScale;
+    const fontPx = 12 * renderScale;
+    const lineHeightPx = fontPx * 1.5;
+    const fontFamily = `${fontPx}px "Courier Prime", "Courier New", monospace`;
+
+    const usableWidth = pageWpx - marginPx * 2;
+    const usableHeight = pageHpx - marginPx * 2;
+    const linesPerPage = Math.max(1, Math.floor(usableHeight / lineHeightPx));
+
+    const measure = document.createElement('canvas').getContext('2d');
+    measure.font = fontFamily;
+
+    const rawLines = text.replace(/\r\n/g, '\n').split('\n');
+    const wrapped = [];
+    rawLines.forEach(rawLine => {
+      if (rawLine.trim() === '') { wrapped.push(''); return; }
+      const words = rawLine.split(/\s+/).filter(Boolean);
+      let cur = '';
+      words.forEach(word => {
+        const test = cur ? cur + ' ' + word : word;
+        if (cur && measure.measureText(test).width > usableWidth) {
+          wrapped.push(cur);
+          cur = word;
+        } else {
+          cur = test;
+        }
+      });
+      wrapped.push(cur);
+    });
+    if (wrapped.length === 0) wrapped.push('');
+
+    const totalPages = Math.max(1, Math.ceil(wrapped.length / linesPerPage));
+
+    for (let p = 0; p < totalPages; p++) {
+      statusEl.textContent = `Typesetting page ${p + 1} of ${totalPages}…`;
+      const pageLines = wrapped.slice(p * linesPerPage, (p + 1) * linesPerPage);
+      const { ctx, overlay, pd } = createPageShell(viewportPt, renderScale, p + 1, totalPages);
+
+      ctx.fillStyle = '#efe7d6';
+      ctx.fillRect(0, 0, pageWpx, pageHpx);
+      ctx.fillStyle = '#201b16';
+      ctx.font = fontFamily;
+      ctx.textBaseline = 'top';
+      pageLines.forEach((line, i) => ctx.fillText(line, marginPx, marginPx + i * lineHeightPx));
+
+      pagesData.push(pd);
+      attachPointerHandlers(overlay, pd);
+      // Yield to the browser periodically so long files don't freeze the tab.
+      if (p % 5 === 4) await new Promise(r => setTimeout(r, 0));
+    }
+
+    statusEl.textContent = `${totalPages} page${totalPages > 1 ? 's' : ''} typeset. Drag out a block over the words you want gone.`;
+    exportBtn.disabled = false;
+    saveProgressBtn.disabled = false;
+  } catch (err) {
+    console.error(err);
+    statusEl.textContent = "Couldn't read that text file.";
+    dropzone.style.display = 'block';
+  }
+}
+
+function getPos(evt, canvas) {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  return { x: (evt.clientX - rect.left) * scaleX, y: (evt.clientY - rect.top) * scaleY };
+}
+
+/* ---------- geometry helpers ---------- */
+
+function pointInRect(pos, m) {
+  return pos.x >= m.x && pos.x <= m.x + m.w && pos.y >= m.y && pos.y <= m.y + m.h;
+}
+
+function findMarkAt(pd, pos) {
+  for (let i = pd.marks.length - 1; i >= 0; i--) {
+    if (pointInRect(pos, pd.marks[i])) return pd.marks[i];
+  }
+  return null;
+}
+
+function handleKeys() {
+  return lockHeight ? ['w', 'e'] : ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
+}
+
+function handlePos(m, key) {
+  const cx = m.x + m.w / 2, cy = m.y + m.h / 2;
+  switch (key) {
+    case 'nw': return { x: m.x, y: m.y };
+    case 'n':  return { x: cx, y: m.y };
+    case 'ne': return { x: m.x + m.w, y: m.y };
+    case 'e':  return { x: m.x + m.w, y: cy };
+    case 'se': return { x: m.x + m.w, y: m.y + m.h };
+    case 's':  return { x: cx, y: m.y + m.h };
+    case 'sw': return { x: m.x, y: m.y + m.h };
+    case 'w':  return { x: m.x, y: cy };
+  }
+}
+
+function handleAt(mark, pos) {
+  for (const k of handleKeys()) {
+    const p = handlePos(mark, k);
+    if (Math.hypot(pos.x - p.x, pos.y - p.y) <= HANDLE_RADIUS) return k;
+  }
+  return null;
+}
+
+function cursorForHandle(k) {
+  if (k === 'n' || k === 's') return 'ns-resize';
+  if (k === 'e' || k === 'w') return 'ew-resize';
+  if (k === 'nw' || k === 'se') return 'nwse-resize';
+  return 'nesw-resize';
+}
+
+function normalizeRect(m) {
+  let { x, y, w, h, color } = m;
+  if (w < 0) { x += w; w = -w; }
+  if (h < 0) { y += h; h = -h; }
+  return { x, y, w, h, color };
+}
+
+function applyResize(mark, key, orig, pos, start) {
+  const dx = pos.x - start.x, dy = pos.y - start.y;
+  let x = orig.x, y = orig.y, w = orig.w, h = orig.h;
+  if (key.includes('w')) { x = orig.x + dx; w = orig.w - dx; }
+  if (key.includes('e')) { w = orig.w + dx; }
+  if (!lockHeight) {
+    if (key.includes('n')) { y = orig.y + dy; h = orig.h - dy; }
+    if (key.includes('s')) { h = orig.h + dy; }
+  }
+  const min = 8;
+  if (w < min) w = min;
+  if (h < min) h = min;
+  mark.x = x; mark.y = y; mark.w = w; mark.h = h;
+}
+
+/* ---------- selection ---------- */
+
+function selectMark(pd, mark) {
+  const prevPd = selected ? selected.pd : null;
+  selected = { pd, mark };
+  if (prevPd && prevPd !== pd) redraw(prevPd);
+  redraw(pd);
+}
+
+function deselect() {
+  if (!selected) return;
+  const pd = selected.pd;
+  selected = null;
+  redraw(pd);
+}
+
+/* ---------- pointer interaction ---------- */
+
+function attachPointerHandlers(overlay, pd) {
+  overlay.addEventListener('pointerdown', e => {
+    if (!pagesData.length) return;
+    overlay.setPointerCapture(e.pointerId);
+    const pos = getPos(e, overlay);
+    activePage = pd;
+    startPos = pos;
+
+    if (selected && selected.pd === pd) {
+      const handle = handleAt(selected.mark, pos);
+      if (handle) {
+        dragMode = 'resize';
+        resizeHandle = handle;
+        resizeOrig = { x: selected.mark.x, y: selected.mark.y, w: selected.mark.w, h: selected.mark.h };
+        drawing = true;
+        return;
+      }
+    }
+
+    const hit = findMarkAt(pd, pos);
+    if (hit) {
+      selectMark(pd, hit);
+      dragMode = 'move';
+      moveOrig = { x: hit.x, y: hit.y };
+      drawing = true;
+      overlay.style.cursor = 'grabbing';
+      return;
+    }
+
+    deselect();
+    dragMode = 'draw';
+    if (lockHeight) {
+      const lockedPx = lockedHeightPt * pd.renderScale;
+      tempMark = { x: pos.x, y: pos.y - lockedPx / 2, w: 0, h: lockedPx, color: currentColor };
+    } else {
+      tempMark = { x: pos.x, y: pos.y, w: 0, h: 0, color: currentColor };
+    }
+    drawing = true;
+  });
+
+  overlay.addEventListener('pointermove', e => {
+    const pos = getPos(e, overlay);
+
+    if (drawing && activePage === pd) {
+      if (dragMode === 'draw') {
+        tempMark.w = pos.x - startPos.x;
+        if (!lockHeight) tempMark.h = pos.y - startPos.y;
+        redraw(pd, tempMark);
+      } else if (dragMode === 'move') {
+        const dx = pos.x - startPos.x, dy = pos.y - startPos.y;
+        selected.mark.x = moveOrig.x + dx;
+        selected.mark.y = moveOrig.y + dy;
+        redraw(pd);
+      } else if (dragMode === 'resize') {
+        applyResize(selected.mark, resizeHandle, resizeOrig, pos, startPos);
+        redraw(pd);
+      }
+      return;
+    }
+
+    let cursor = 'crosshair';
+    if (selected && selected.pd === pd) {
+      const h = handleAt(selected.mark, pos);
+      if (h) cursor = cursorForHandle(h);
+      else if (pointInRect(pos, selected.mark)) cursor = 'grab';
+    }
+    if (cursor === 'crosshair' && findMarkAt(pd, pos)) cursor = 'grab';
+    overlay.style.cursor = cursor;
+  });
+
+  overlay.addEventListener('pointerup', () => finishStroke(pd));
+  overlay.addEventListener('pointercancel', () => finishStroke(pd));
+}
+
+function finishStroke(pd) {
+  if (!drawing || activePage !== pd) return;
+  drawing = false;
+
+  if (dragMode === 'draw') {
+    const m = normalizeRect(tempMark);
+    if (Math.abs(m.w) > 3 && Math.abs(m.h) > 3) {
+      pd.marks.push(m);
+      undoStack.push({ type: 'add', pageIndex: pagesData.indexOf(pd), mark: m });
+      selectMark(pd, m);
+      if (!lockHeight) syncLockedHeight(m.h, pd);
+      refreshButtons();
+    }
+  } else if (dragMode === 'move') {
+    const after = { x: selected.mark.x, y: selected.mark.y };
+    if (after.x !== moveOrig.x || after.y !== moveOrig.y) {
+      undoStack.push({ type: 'move', pageIndex: pagesData.indexOf(pd), mark: selected.mark, before: moveOrig });
+      refreshButtons();
+    }
+  } else if (dragMode === 'resize') {
+    const m = selected.mark;
+    const changed = m.x !== resizeOrig.x || m.y !== resizeOrig.y || m.w !== resizeOrig.w || m.h !== resizeOrig.h;
+    if (changed) {
+      undoStack.push({ type: 'resize', pageIndex: pagesData.indexOf(pd), mark: m, before: resizeOrig });
+      if (!lockHeight && (resizeHandle.includes('n') || resizeHandle.includes('s'))) syncLockedHeight(m.h, pd);
+      refreshButtons();
+    }
+  }
+
+  tempMark = null;
+  dragMode = null;
+  resizeHandle = null;
+  activePage = null;
+  pd.overlay.style.cursor = 'crosshair';
+  redraw(pd);
+}
+
+function syncLockedHeight(hPx, pd) {
+  lockedHeightPt = Math.round(Math.abs(hPx) / pd.renderScale);
+  lockedHeightPt = Math.min(200, Math.max(4, lockedHeightPt));
+}
+
+/* ---------- drawing to canvas ---------- */
+
+function drawRect(ctx, m) {
+  ctx.fillStyle = m.color;
+  ctx.fillRect(m.x, m.y, m.w, m.h);
+}
+
+function drawHandles(ctx, m) {
+  ctx.save();
+  ctx.strokeStyle = '#3d7dc9';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([4, 3]);
+  ctx.strokeRect(m.x - 1, m.y - 1, m.w + 2, m.h + 2);
+  ctx.setLineDash([]);
+  handleKeys().forEach(k => {
+    const p = handlePos(m, k);
+    ctx.fillStyle = '#ffffff';
+    ctx.strokeStyle = '#3d7dc9';
+    ctx.fillRect(p.x - HANDLE_SIZE / 2, p.y - HANDLE_SIZE / 2, HANDLE_SIZE, HANDLE_SIZE);
+    ctx.strokeRect(p.x - HANDLE_SIZE / 2, p.y - HANDLE_SIZE / 2, HANDLE_SIZE, HANDLE_SIZE);
+  });
+  ctx.restore();
+}
+
+function redraw(pd, preview) {
+  const ctx = pd.octx;
+  ctx.clearRect(0, 0, pd.overlay.width, pd.overlay.height);
+  ctx.globalAlpha = peeking ? 0.15 : 1;
+  pd.marks.forEach(m => drawRect(ctx, m));
+  if (preview) drawRect(ctx, preview);
+  ctx.globalAlpha = 1;
+  if (selected && selected.pd === pd) drawHandles(ctx, selected.mark);
+}
+
+/* ---------- undo ---------- */
+
+function undo() {
+  const action = undoStack.pop();
+  if (!action) return;
+  const pd = pagesData[action.pageIndex];
+  if (!pd) return refreshButtons();
+
+  if (action.type === 'add') {
+    const idx = pd.marks.indexOf(action.mark);
+    if (idx !== -1) pd.marks.splice(idx, 1);
+    if (selected && selected.mark === action.mark) selected = null;
+  } else if (action.type === 'remove') {
+    pd.marks.splice(Math.min(action.index, pd.marks.length), 0, action.mark);
+    selected = { pd, mark: action.mark };
+  } else if (action.type === 'move') {
+    action.mark.x = action.before.x;
+    action.mark.y = action.before.y;
+  } else if (action.type === 'resize') {
+    action.mark.x = action.before.x;
+    action.mark.y = action.before.y;
+    action.mark.w = action.before.w;
+    action.mark.h = action.before.h;
+  }
+
+  redraw(pd);
+  refreshButtons();
+}
+
+function refreshButtons() {
+  undoBtn.disabled = undoStack.length === 0;
+  clearAllBtn.disabled = pagesData.every(pd => pd.marks.length === 0);
+}
+
+/* ---------- saving files from inside the page ---------- */
+
+async function saveFile(filename, data) {
+  let downloads = null;
+  try {
+    if (window.claude && window.claude.use) downloads = await window.claude.use('downloads');
+  } catch (err) {
+    downloads = null;
+  }
+  if (downloads) {
+    try {
+      await downloads.save({ filename, data });
+      return true;
+    } catch (err) {
+      if (err && err.code === 'declined') return false;
+      console.warn('downloads.save failed, trying fallback', err);
+    }
+  }
+  try {
+    const blob = data instanceof Blob ? data : new Blob([data]);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+    return true;
+  } catch (err2) {
+    console.error('Save failed entirely', err2);
+    alert("Couldn't save that file in this environment.");
+    return false;
+  }
+}
+
+/* ---------- save / resume progress ---------- */
+
+async function saveProgress() {
+  if (!pagesData.length) return;
+  const payload = {
+    kind: 'erasure-progress',
+    version: 1,
+    savedAt: new Date().toISOString(),
+    pages: pagesData.map(pd => ({
+      width: Math.round(pd.viewportPt.width * 100) / 100,
+      height: Math.round(pd.viewportPt.height * 100) / 100,
+      marks: pd.marks.map(m => ({
+        x: Math.round((m.x / pd.renderScale) * 100) / 100,
+        y: Math.round((m.y / pd.renderScale) * 100) / 100,
+        w: Math.round((m.w / pd.renderScale) * 100) / 100,
+        h: Math.round((m.h / pd.renderScale) * 100) / 100,
+        color: m.color
+      }))
+    }))
+  };
+  const name = (titleInput.value.trim() || 'erasure-progress').replace(/[^a-z0-9\-_ ]/gi, '').trim() || 'erasure-progress';
+  const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+  await saveFile(name + '.json', blob);
+}
+
+function applyProgress(data) {
+  if (!data || data.kind !== 'erasure-progress' || !Array.isArray(data.pages)) {
+    alert("That doesn't look like a saved Erasure progress file.");
+    return;
+  }
+  if (!pagesData.length) {
+    alert('Load the same document first, then load its saved progress.');
+    return;
+  }
+  let mismatched = false;
+  let touched = 0;
+  data.pages.forEach((saved, idx) => {
+    const pd = pagesData[idx];
+    if (!pd) return;
+    if (Math.abs(pd.viewportPt.width - saved.width) > 2 || Math.abs(pd.viewportPt.height - saved.height) > 2) {
+      mismatched = true;
+    }
+    pd.marks = (saved.marks || []).map(m => ({
+      x: m.x * pd.renderScale,
+      y: m.y * pd.renderScale,
+      w: m.w * pd.renderScale,
+      h: m.h * pd.renderScale,
+      color: m.color || currentColor
+    }));
+    touched++;
+    redraw(pd);
+  });
+  undoStack = [];
+  selected = null;
+  refreshButtons();
+  statusEl.textContent = mismatched
+    ? "Progress loaded, but this file's page sizes don't quite match the saved one — double-check the redactions landed in the right places."
+    : `Restored redactions on ${touched} page${touched === 1 ? '' : 's'}.`;
+}
+
+/* ---------- export ---------- */
+
+async function exportPdf() {
+  if (!pagesData.length) return;
+  exportBtn.disabled = true;
+  const originalLabel = exportBtn.textContent;
+  exportBtn.textContent = 'Exporting…';
+  try {
+    const { jsPDF } = window.jspdf;
+    let doc = null;
+    for (let i = 0; i < pagesData.length; i++) {
+      const pd = pagesData[i];
+      const wPt = pd.viewportPt.width;
+      const hPt = pd.viewportPt.height;
+
+      const comp = document.createElement('canvas');
+      comp.width = pd.canvas.width;
+      comp.height = pd.canvas.height;
+      const cctx = comp.getContext('2d');
+      cctx.drawImage(pd.canvas, 0, 0);
+      cctx.globalAlpha = 1;
+      pd.marks.forEach(m => drawRect(cctx, m));
+
+      const imgData = comp.toDataURL('image/jpeg', 0.92);
+
+      if (i === 0) {
+        doc = new jsPDF({ unit: 'pt', format: [wPt, hPt] });
+      } else {
+        doc.addPage([wPt, hPt]);
+      }
+      doc.addImage(imgData, 'JPEG', 0, 0, wPt, hPt);
+    }
+    const name = (titleInput.value.trim() || 'erasure-poem').replace(/[^a-z0-9\-_ ]/gi, '').trim() || 'erasure-poem';
+    const blob = doc.output('blob');
+    await saveFile(name + '.pdf', blob);
+  } catch (err) {
+    console.error(err);
+    alert("Export failed — the document may be too large or unusually structured. Try again with fewer pages.");
+  } finally {
+    exportBtn.disabled = false;
+    exportBtn.textContent = originalLabel;
+  }
+}
+</script>
+</body>
+</html>
