@@ -433,17 +433,31 @@
   </div>
 
   <div class="section">
+    <p class="section-label">crop</p>
+    <button id="cropBtn" class="btn" type="button" disabled>Crop pages…</button>
+    <div id="cropActions" style="display:none;">
+      <div style="height:8px;"></div>
+      <button id="cropApplyBtn" class="btn" type="button">Apply crop</button>
+    </div>
+    <div style="height:8px;"></div>
+    <button id="cropResetBtn" class="btn" type="button" disabled>Reset crop</button>
+    <p class="hint" id="cropHint">Trim the margins off your pages.</p>
+  </div>
+
+  <div class="section">
     <p class="section-label">straighten</p>
     <div class="skew-row">
       <input id="skewSlider" type="range" min="-5" max="5" step="0.1" value="0" disabled aria-label="Rotate page">
       <span id="skewValue" class="skew-value">0.0°</span>
     </div>
     <div style="height:8px;"></div>
+    <label class="check-row"><input id="gridToggle" type="checkbox"> Show alignment grid</label>
+    <div style="height:8px;"></div>
     <div class="btn-row">
       <button id="skewResetBtn" class="btn" type="button" disabled>Reset</button>
       <button id="skewAllBtn" class="btn" type="button" disabled>Apply to all</button>
     </div>
-    <p class="hint" id="skewHint">Nudge a crooked scan level. A grid appears while you drag so you can line the text up.</p>
+    <p class="hint" id="skewHint">Nudge a crooked scan level. Turn on the grid and line the text up with a horizontal rule.</p>
   </div>
 
   <div class="section">
@@ -557,6 +571,12 @@ const skewValue = document.getElementById('skewValue');
 const skewResetBtn = document.getElementById('skewResetBtn');
 const skewAllBtn = document.getElementById('skewAllBtn');
 const skewHint = document.getElementById('skewHint');
+const gridToggle = document.getElementById('gridToggle');
+const cropBtn = document.getElementById('cropBtn');
+const cropActions = document.getElementById('cropActions');
+const cropApplyBtn = document.getElementById('cropApplyBtn');
+const cropResetBtn = document.getElementById('cropResetBtn');
+const cropHint = document.getElementById('cropHint');
 
 let pagesData = [];        // {pageNum, canvas, overlay, octx, marks:[], renderScale, viewportPt}
 let undoStack = [];        // {type:'add'|'remove'|'move'|'resize', pageIndex, mark, ...}
@@ -589,6 +609,7 @@ let tempMark = null;
 let moveOrig = null;
 let marqueeRect = null;
 let lastActivePd = null;
+let cropMode = false;
 let resizeOrig = null;
 let resizeHandle = null;
 
@@ -847,6 +868,12 @@ window.addEventListener('keydown', e => {
   if (document.activeElement === titleInput || document.activeElement === customColor || document.activeElement === skewSlider) return;
   if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); return; }
 
+  if (cropMode) {
+    if (e.key === 'Escape') exitCropMode(false);
+    else if (e.key === 'Enter') exitCropMode(true);
+    return;
+  }
+
   if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'a') {
     const pd = selected ? selected.pd : (lastActivePd || pagesData.find(p => p.marks.length));
     if (pd && pd.marks.length) { e.preventDefault(); setSelection(pd, pd.marks.slice()); }
@@ -917,6 +944,7 @@ async function loadFile(file) {
   }
   pendingSession = null;
   updateSkewUI();
+  updateCropUI();
   persistSession();
 }
 
@@ -926,6 +954,8 @@ function resetWorkspace() {
   pagesData = [];
   undoStack = [];
   selected = null;
+  cropMode = false;
+  lastActivePd = null;
   refreshButtons();
   exportBtn.disabled = true;
   saveProgressBtn.disabled = true;
@@ -989,11 +1019,42 @@ function createPageShell(viewportPt, renderScale, pageNum, totalPages) {
     octx: overlay.getContext('2d'),
     marks: [],
     deskew: 0,
+    crop: { x: 0, y: 0, w: viewportPt.width, h: viewportPt.height },
+    editCrop: null,
     renderScale,
     viewportPt: { width: viewportPt.width, height: viewportPt.height }
   };
 
   return { canvas, overlay, ctx: srcCanvas.getContext('2d'), pd };
+}
+
+/* ---------- cropping ---------- */
+
+function fullCrop(pd) {
+  return { x: 0, y: 0, w: pd.viewportPt.width, h: pd.viewportPt.height };
+}
+
+// While the crop tool is open every page shows its full extent so the crop can be widened again.
+function visibleCrop(pd) {
+  return cropMode ? fullCrop(pd) : pd.crop;
+}
+
+function cropOffsetPx(pd) {
+  const c = visibleCrop(pd);
+  return { x: c.x * pd.renderScale, y: c.y * pd.renderScale };
+}
+
+function resizePage(pd) {
+  const c = visibleCrop(pd);
+  const w = Math.max(1, Math.round(c.w * pd.renderScale));
+  const h = Math.max(1, Math.round(c.h * pd.renderScale));
+  pd.canvas.width = w; pd.canvas.height = h;
+  pd.overlay.width = w; pd.overlay.height = h;
+  pd.baseWidth = w; pd.baseHeight = h;
+  pd.pageWrap.style.width = (w * zoom) + 'px';
+  pd.pageWrap.style.height = (h * zoom) + 'px';
+  applyDeskew(pd);
+  redraw(pd);
 }
 
 /* ---------- straightening ---------- */
@@ -1006,20 +1067,22 @@ function coverScale(w, h, rad) {
 
 function applyDeskew(pd) {
   const ctx = pd.canvas.getContext('2d');
-  const w = pd.canvas.width, h = pd.canvas.height;
+  const off = cropOffsetPx(pd);
+  const sw = pd.srcCanvas.width, sh = pd.srcCanvas.height;
   ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.clearRect(0, 0, w, h);
-  if (!pd.deskew) {
-    ctx.drawImage(pd.srcCanvas, 0, 0);
-    return;
-  }
-  const rad = pd.deskew * Math.PI / 180;
-  const scale = coverScale(w, h, rad);
+  ctx.clearRect(0, 0, pd.canvas.width, pd.canvas.height);
   ctx.save();
-  ctx.translate(w / 2, h / 2);
-  ctx.rotate(rad);
-  ctx.scale(scale, scale);
-  ctx.drawImage(pd.srcCanvas, -w / 2, -h / 2);
+  ctx.translate(-off.x, -off.y);
+  if (pd.deskew) {
+    const rad = pd.deskew * Math.PI / 180;
+    const scale = coverScale(sw, sh, rad);
+    ctx.translate(sw / 2, sh / 2);
+    ctx.rotate(rad);
+    ctx.scale(scale, scale);
+    ctx.drawImage(pd.srcCanvas, -sw / 2, -sh / 2);
+  } else {
+    ctx.drawImage(pd.srcCanvas, 0, 0);
+  }
   ctx.restore();
 }
 
@@ -1244,6 +1307,86 @@ async function resumeSession() {
 resumeBtn.addEventListener('click', resumeSession);
 restoreSession();
 
+/* ---------- crop controls ---------- */
+
+function cropToPx(pd, crop) {
+  return { x: crop.x * pd.renderScale, y: crop.y * pd.renderScale, w: crop.w * pd.renderScale, h: crop.h * pd.renderScale };
+}
+
+function cropToPt(pd, box) {
+  return {
+    x: Math.round((box.x / pd.renderScale) * 100) / 100,
+    y: Math.round((box.y / pd.renderScale) * 100) / 100,
+    w: Math.round((box.w / pd.renderScale) * 100) / 100,
+    h: Math.round((box.h / pd.renderScale) * 100) / 100
+  };
+}
+
+function clampCrop(pd, box) {
+  const maxW = pd.srcCanvas.width, maxH = pd.srcCanvas.height;
+  const x = Math.max(0, Math.min(box.x, maxW - 1));
+  const y = Math.max(0, Math.min(box.y, maxH - 1));
+  return { x, y, w: Math.min(box.w, maxW - x), h: Math.min(box.h, maxH - y) };
+}
+
+function isFullCrop(pd) {
+  return Math.abs(pd.crop.w - pd.viewportPt.width) < 0.5 && Math.abs(pd.crop.h - pd.viewportPt.height) < 0.5
+    && Math.abs(pd.crop.x) < 0.5 && Math.abs(pd.crop.y) < 0.5;
+}
+
+function updateCropUI() {
+  const pd = currentPage();
+  cropBtn.disabled = !pd;
+  cropBtn.textContent = cropMode ? 'Cancel crop' : 'Crop pages…';
+  cropBtn.classList.toggle('active', cropMode);
+  cropActions.style.display = cropMode ? '' : 'none';
+  cropResetBtn.disabled = !pd || (!cropMode && isFullCrop(pd));
+  if (!pd) { cropHint.textContent = 'Trim the margins off your pages.'; return; }
+  if (cropMode) {
+    const box = cropToPt(pd, normalizeRect(pd.editCrop));
+    cropHint.textContent = `Drag a box on a page, then Apply. Page ${pd.pageNum}: ${Math.round(box.w)} × ${Math.round(box.h)} pt.`;
+  } else {
+    cropHint.textContent = isFullCrop(pd)
+      ? 'Trim the margins off your pages. Blocks keep their positions.'
+      : `Page ${pd.pageNum} cropped to ${Math.round(pd.crop.w)} × ${Math.round(pd.crop.h)} pt.`;
+  }
+}
+
+function enterCropMode() {
+  if (!pagesData.length) return;
+  deselect();
+  cropMode = true;
+  pagesData.forEach(pd => {
+    pd.editCrop = cropToPx(pd, pd.crop);
+    resizePage(pd);
+  });
+  updateCropUI();
+}
+
+function exitCropMode(commit) {
+  if (!cropMode) return;
+  cropMode = false;
+  pagesData.forEach(pd => {
+    if (commit && pd.editCrop) pd.crop = cropToPt(pd, normalizeRect(pd.editCrop));
+    pd.editCrop = null;
+    resizePage(pd);
+  });
+  updateCropUI();
+  persistSession();
+}
+
+cropBtn.addEventListener('click', () => cropMode ? exitCropMode(false) : enterCropMode());
+cropApplyBtn.addEventListener('click', () => exitCropMode(true));
+cropResetBtn.addEventListener('click', () => {
+  pagesData.forEach(pd => {
+    pd.crop = fullCrop(pd);
+    if (cropMode) pd.editCrop = cropToPx(pd, pd.crop);
+    resizePage(pd);
+  });
+  updateCropUI();
+  persistSession();
+});
+
 /* ---------- straighten controls ---------- */
 
 function currentPage() {
@@ -1261,7 +1404,7 @@ function updateSkewUI() {
   skewValue.textContent = `${pd.deskew > 0 ? '+' : ''}${pd.deskew.toFixed(1)}°`;
   skewHint.textContent = pagesData.length > 1
     ? `Straightening page ${pd.pageNum}. Click a page to switch to it.`
-    : 'Nudge a crooked scan level. A grid appears while you drag so you can line the text up.';
+    : 'Turn on the grid and line the text up with a horizontal rule.';
 }
 
 function setDeskew(pd, deg) {
@@ -1269,22 +1412,26 @@ function setDeskew(pd, deg) {
   applyDeskew(pd);
 }
 
-let gridTimer = null;
-function flashGrid() {
-  document.body.classList.add('show-grid');
-  clearTimeout(gridTimer);
-  gridTimer = setTimeout(() => document.body.classList.remove('show-grid'), 1200);
+let adjustingSkew = false;
+function updateGrid() {
+  document.body.classList.toggle('show-grid', gridToggle.checked || adjustingSkew);
 }
+
+gridToggle.addEventListener('change', updateGrid);
 
 skewSlider.addEventListener('input', () => {
   const pd = currentPage();
   if (!pd) return;
   setDeskew(pd, parseFloat(skewSlider.value));
-  flashGrid();
   updateSkewUI();
   persistSession();
 });
-skewSlider.addEventListener('pointerdown', () => document.body.classList.add('show-grid'));
+skewSlider.addEventListener('pointerdown', () => { adjustingSkew = true; updateGrid(); });
+skewSlider.addEventListener('focus', () => { adjustingSkew = true; updateGrid(); });
+skewSlider.addEventListener('blur', () => { adjustingSkew = false; updateGrid(); });
+window.addEventListener('pointerup', () => {
+  if (adjustingSkew && document.activeElement !== skewSlider) { adjustingSkew = false; updateGrid(); }
+});
 skewResetBtn.addEventListener('click', () => {
   const pd = currentPage();
   if (!pd) return;
@@ -1296,15 +1443,20 @@ skewAllBtn.addEventListener('click', () => {
   const pd = currentPage();
   if (!pd) return;
   pagesData.forEach(p => { if (p !== pd) setDeskew(p, pd.deskew); });
-  flashGrid();
   persistSession();
 });
 
-function getPos(evt, canvas) {
+// Marks always live in full-page canvas pixels, so the crop offset is added back here.
+function getPos(evt, pd) {
+  const canvas = pd.overlay;
   const rect = canvas.getBoundingClientRect();
   const scaleX = canvas.width / rect.width;
   const scaleY = canvas.height / rect.height;
-  return { x: (evt.clientX - rect.left) * scaleX, y: (evt.clientY - rect.top) * scaleY };
+  const off = cropOffsetPx(pd);
+  return {
+    x: (evt.clientX - rect.left) * scaleX + off.x,
+    y: (evt.clientY - rect.top) * scaleY + off.y
+  };
 }
 
 /* ---------- geometry helpers ---------- */
@@ -1320,8 +1472,8 @@ function findMarkAt(pd, pos) {
   return null;
 }
 
-function handleKeys() {
-  return lockHeight ? ['w', 'e'] : ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
+function handleKeys(all) {
+  return (all || !lockHeight) ? ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'] : ['w', 'e'];
 }
 
 function handlePos(m, key) {
@@ -1338,8 +1490,9 @@ function handlePos(m, key) {
   }
 }
 
-function handleAt(mark, pos) {
-  for (const k of handleKeys()) {
+function handleAt(mark, pos, all) {
+  if (!mark) return null;
+  for (const k of handleKeys(all)) {
     const p = handlePos(mark, k);
     if (Math.hypot(pos.x - p.x, pos.y - p.y) <= HANDLE_RADIUS) return k;
   }
@@ -1360,12 +1513,12 @@ function normalizeRect(m) {
   return { x, y, w, h, color };
 }
 
-function applyResize(mark, key, orig, pos, start) {
+function applyResize(mark, key, orig, pos, start, freeHeight) {
   const dx = pos.x - start.x, dy = pos.y - start.y;
   let x = orig.x, y = orig.y, w = orig.w, h = orig.h;
   if (key.includes('w')) { x = orig.x + dx; w = orig.w - dx; }
   if (key.includes('e')) { w = orig.w + dx; }
-  if (!lockHeight) {
+  if (!lockHeight || freeHeight) {
     if (key.includes('n')) { y = orig.y + dy; h = orig.h - dy; }
     if (key.includes('s')) { h = orig.h + dy; }
   }
@@ -1520,11 +1673,26 @@ function attachPointerHandlers(overlay, pd) {
   overlay.addEventListener('pointerdown', e => {
     if (!pagesData.length) return;
     overlay.setPointerCapture(e.pointerId);
-    const pos = getPos(e, overlay);
+    const pos = getPos(e, pd);
     activePage = pd;
     lastActivePd = pd;
     startPos = pos;
     updateSkewUI();
+
+    if (cropMode) {
+      const handle = handleAt(pd.editCrop, pos, true);
+      if (handle) {
+        dragMode = 'cropResize';
+        resizeHandle = handle;
+        resizeOrig = snapshot(pd.editCrop);
+      } else {
+        dragMode = 'cropDraw';
+        pd.editCrop = { x: pos.x, y: pos.y, w: 0, h: 0 };
+      }
+      drawing = true;
+      redraw(pd);
+      return;
+    }
 
     const single = selected && selected.pd === pd ? soleMark() : null;
     if (single) {
@@ -1573,10 +1741,17 @@ function attachPointerHandlers(overlay, pd) {
   });
 
   overlay.addEventListener('pointermove', e => {
-    const pos = getPos(e, overlay);
+    const pos = getPos(e, pd);
 
     if (drawing && activePage === pd) {
-      if (dragMode === 'draw') {
+      if (dragMode === 'cropDraw') {
+        pd.editCrop.w = pos.x - startPos.x;
+        pd.editCrop.h = pos.y - startPos.y;
+        redraw(pd);
+      } else if (dragMode === 'cropResize') {
+        applyResize(pd.editCrop, resizeHandle, resizeOrig, pos, startPos, true);
+        redraw(pd);
+      } else if (dragMode === 'draw') {
         tempMark.w = pos.x - startPos.x;
         if (!lockHeight) tempMark.h = pos.y - startPos.y;
         redraw(pd, tempMark);
@@ -1596,6 +1771,11 @@ function attachPointerHandlers(overlay, pd) {
     }
 
     let cursor = 'crosshair';
+    if (cropMode) {
+      const h = handleAt(pd.editCrop, pos, true);
+      overlay.style.cursor = h ? cursorForHandle(h) : 'crosshair';
+      return;
+    }
     const single = selected && selected.pd === pd ? soleMark() : null;
     if (single) {
       const h = handleAt(single, pos);
@@ -1614,7 +1794,16 @@ function finishStroke(pd) {
   if (!drawing || activePage !== pd) return;
   drawing = false;
 
-  if (dragMode === 'draw') {
+  if (dragMode === 'cropDraw' || dragMode === 'cropResize') {
+    const box = normalizeRect(pd.editCrop);
+    const minPx = 20 * pd.renderScale;
+    if (box.w < minPx || box.h < minPx) {
+      pd.editCrop = cropToPx(pd, pd.crop);
+    } else {
+      pd.editCrop = clampCrop(pd, box);
+    }
+    updateCropUI();
+  } else if (dragMode === 'draw') {
     const m = normalizeRect(tempMark);
     if (Math.abs(m.w) > 3 && Math.abs(m.h) > 3) {
       pd.marks.push(m);
@@ -1673,14 +1862,14 @@ function drawRect(ctx, m) {
   ctx.fillRect(m.x, m.y, m.w, m.h);
 }
 
-function drawHandles(ctx, m) {
+function drawHandles(ctx, m, all) {
   ctx.save();
   ctx.strokeStyle = '#3d7dc9';
   ctx.lineWidth = 1.5;
   ctx.setLineDash([4, 3]);
   ctx.strokeRect(m.x - 1, m.y - 1, m.w + 2, m.h + 2);
   ctx.setLineDash([]);
-  handleKeys().forEach(k => {
+  handleKeys(all).forEach(k => {
     const p = handlePos(m, k);
     ctx.fillStyle = '#ffffff';
     ctx.strokeStyle = '#3d7dc9';
@@ -1711,18 +1900,38 @@ function drawMarquee(ctx, r) {
   ctx.restore();
 }
 
+function drawCropOverlay(ctx, pd) {
+  if (!pd.editCrop) return;
+  const box = normalizeRect(pd.editCrop);
+  const w = pd.srcCanvas.width, h = pd.srcCanvas.height;
+  ctx.save();
+  ctx.fillStyle = 'rgba(20,15,10,0.55)';
+  ctx.beginPath();
+  ctx.rect(0, 0, w, h);
+  ctx.rect(box.x, box.y, box.w, box.h);
+  ctx.fill('evenodd');
+  ctx.restore();
+  drawHandles(ctx, box, true);
+}
+
 function redraw(pd, preview) {
   const ctx = pd.octx;
+  const off = cropOffsetPx(pd);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, pd.overlay.width, pd.overlay.height);
+  ctx.setTransform(1, 0, 0, 1, -off.x, -off.y);
   ctx.globalAlpha = peeking ? 0.35 : 1;
   pd.marks.forEach(m => drawRect(ctx, m));
   if (preview) drawRect(ctx, preview);
   ctx.globalAlpha = 1;
-  if (selected && selected.pd === pd) {
+  if (cropMode) {
+    drawCropOverlay(ctx, pd);
+  } else if (selected && selected.pd === pd) {
     if (selected.marks.length === 1) drawHandles(ctx, selected.marks[0]);
     else selected.marks.forEach(m => drawOutline(ctx, m));
   }
   if (marqueeRect && activePage === pd) drawMarquee(ctx, marqueeRect);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
 }
 
 /* ---------- undo ---------- */
@@ -1794,6 +2003,7 @@ function refreshButtons() {
     ? `${selCount()} blocks selected.`
     : 'Shift-click blocks to select several, or Alt-drag a box around them.';
   updateSkewUI();
+  updateCropUI();
   persistSession();
 }
 
@@ -1880,6 +2090,7 @@ function buildProgressPayload() {
       width: Math.round(pd.viewportPt.width * 100) / 100,
       height: Math.round(pd.viewportPt.height * 100) / 100,
       deskew: pd.deskew || 0,
+      crop: { x: pd.crop.x, y: pd.crop.y, w: pd.crop.w, h: pd.crop.h },
       marks: pd.marks.map(m => ({
         x: Math.round((m.x / pd.renderScale) * 100) / 100,
         y: Math.round((m.y / pd.renderScale) * 100) / 100,
@@ -1975,6 +2186,11 @@ function applyProgress(data) {
       mismatched = true;
     }
     if (typeof saved.deskew === 'number' && isFinite(saved.deskew)) setDeskew(pd, saved.deskew);
+    if (saved.crop && isFinite(saved.crop.w) && saved.crop.w > 0) {
+      pd.crop = clampCrop(pd, cropToPx(pd, saved.crop));
+      pd.crop = cropToPt(pd, pd.crop);
+      resizePage(pd);
+    }
     pd.marks = (saved.marks || []).map(m => ({
       x: m.x * pd.renderScale,
       y: m.y * pd.renderScale,
@@ -1997,6 +2213,7 @@ function applyProgress(data) {
 
 async function exportPdf() {
   if (!pagesData.length) return;
+  if (cropMode) exitCropMode(true);
   exportBtn.disabled = true;
   const originalLabel = exportBtn.textContent;
   exportBtn.textContent = 'Exporting…';
@@ -2005,8 +2222,8 @@ async function exportPdf() {
     let doc = null;
     for (let i = 0; i < pagesData.length; i++) {
       const pd = pagesData[i];
-      const wPt = pd.viewportPt.width;
-      const hPt = pd.viewportPt.height;
+      const wPt = pd.crop.w;
+      const hPt = pd.crop.h;
 
       const comp = document.createElement('canvas');
       comp.width = pd.canvas.width;
@@ -2014,6 +2231,7 @@ async function exportPdf() {
       const cctx = comp.getContext('2d');
       cctx.drawImage(pd.canvas, 0, 0);
       cctx.globalAlpha = 1;
+      cctx.translate(-pd.crop.x * pd.renderScale, -pd.crop.y * pd.renderScale);
       pd.marks.forEach(m => drawRect(cctx, m));
 
       const imgData = comp.toDataURL('image/jpeg', 0.92);
