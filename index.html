@@ -308,6 +308,16 @@
     backdrop-filter: blur(6px);
   }
   #selectionBar { display: none; border-color: rgba(74,144,217,0.45); }
+  .mode-indicator {
+    padding: 5px 8px;
+    border-radius: 5px;
+    background: #e8f0f8;
+    color: #254b77;
+    font-size: 0.78rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .mode-indicator.cropping { background: #fff0d9; color: #724914; }
   .sel-count {
     font-size: 0.8rem;
     color: var(--ink-soft);
@@ -333,7 +343,11 @@
     font-size: 0.66rem;
     letter-spacing: 0.06em;
     color: var(--ink-soft);
-    margin: 0 0 8px;
+    margin: -10px -10px 8px;
+    padding: 12px 10px 10px;
+    cursor: move;
+    touch-action: none;
+    user-select: none;
   }
   .pop-btn {
     display: block;
@@ -355,6 +369,16 @@
   .pop-row { display: flex; gap: 6px; }
   .pop-row .pop-btn { flex: 1; }
   .pop-hint { font-size: 0.74rem; color: var(--ink-soft); line-height: 1.4; margin: 6px 0 0; }
+  .page-list { max-height: 240px; overflow-y: auto; margin-bottom: 8px; }
+  .page-list label, .page-list .removed-page {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 4px;
+    font-size: 0.84rem;
+    color: var(--ink);
+  }
+  .page-list input { accent-color: var(--accent); }
+  .removed-page span { flex: 1; color: var(--ink-soft); }
+  .removed-page button { border: 0; background: none; color: var(--accent); cursor: pointer; }
   .tool {
     width: 34px; height: 34px;
     display: flex; align-items: center; justify-content: center;
@@ -498,6 +522,7 @@
 <main id="main">
   <div id="toolbarWrap">
     <div id="toolbar" aria-label="Document tools">
+      <span id="modeIndicator" class="mode-indicator" role="status">Marking</span>
       <button class="tool" id="tbZoomOut" type="button" disabled title="Zoom out" aria-label="Zoom out">
         <svg viewBox="0 0 20 20"><circle cx="8.5" cy="8.5" r="5.5"/><line x1="12.6" y1="12.6" x2="17.5" y2="17.5"/><line x1="6" y1="8.5" x2="11" y2="8.5"/></svg>
       </button>
@@ -511,11 +536,14 @@
 
       <span class="tool-sep"></span>
 
-      <button class="tool has-menu" id="tbCrop" type="button" disabled title="Crop pages" aria-label="Crop pages" aria-haspopup="dialog">
+      <button class="tool has-menu" id="tbCrop" type="button" disabled title="Crop a page" aria-label="Crop a page" aria-haspopup="dialog">
         <svg viewBox="0 0 20 20"><path d="M6 1.5v12.5h12.5"/><path d="M1.5 6H14v12.5"/></svg>
       </button>
-      <button class="tool has-menu" id="tbStraighten" type="button" disabled title="Straighten pages" aria-label="Straighten pages" aria-haspopup="dialog">
+      <button class="tool has-menu" id="tbStraighten" type="button" disabled title="Straighten a page" aria-label="Straighten a page" aria-haspopup="dialog">
         <svg viewBox="0 0 20 20"><line x1="2" y1="16.5" x2="18" y2="16.5"/><line x1="2.5" y1="11.5" x2="17.5" y2="4.5"/><line x1="2.5" y1="9.5" x2="2.5" y2="13.5"/><line x1="17.5" y1="2.5" x2="17.5" y2="6.5"/></svg>
+      </button>
+      <button class="tool has-menu" id="tbPages" type="button" disabled title="Manage PDF pages" aria-label="Manage PDF pages" aria-haspopup="dialog">
+        <svg viewBox="0 0 20 20"><path d="M5 2.5h9l3 3v11H5z"/><path d="M14 2.5v3h3M2 5v13h11"/></svg>
       </button>
 
       <span class="tool-sep"></span>
@@ -556,9 +584,9 @@
 
       <div class="popover" id="cropPop" role="dialog" aria-label="Crop options">
         <p class="pop-title">Crop</p>
-        <button id="cropBtn" class="pop-btn" type="button" disabled>Crop pages…</button>
+        <button id="cropBtn" class="pop-btn" type="button" disabled>Start crop</button>
         <div id="cropActions" style="display:none;">
-          <button id="cropApplyBtn" class="pop-btn primary" type="button">Apply crop</button>
+          <button id="cropApplyBtn" class="pop-btn primary" type="button">Apply</button>
         </div>
         <button id="cropResetBtn" class="pop-btn" type="button" disabled>Reset crop</button>
         <p class="pop-hint" id="cropHint">Trim the margins off your pages.</p>
@@ -573,9 +601,15 @@
         <label class="check-row"><input id="gridToggle" type="checkbox"> Show alignment grid</label>
         <div class="pop-row">
           <button id="skewResetBtn" class="pop-btn" type="button" disabled>Reset</button>
-          <button id="skewAllBtn" class="pop-btn" type="button" disabled>Apply to all</button>
+          <button id="skewApplyBtn" class="pop-btn primary" type="button" disabled>Apply</button>
         </div>
         <p class="pop-hint" id="skewHint">Nudge a crooked scan level.</p>
+      </div>
+      <div class="popover" id="pagesPop" role="dialog" aria-label="Manage PDF pages">
+        <p class="pop-title">Pages</p>
+        <div class="page-list" id="pageList"></div>
+        <button id="deletePagesBtn" class="pop-btn" type="button" disabled>Delete selected pages</button>
+        <p class="pop-hint">Only the exported PDF changes. The original stays untouched.</p>
       </div>
     </div>
 
@@ -663,12 +697,13 @@ const resumeBtn = document.getElementById('resumeBtn');
 const skewSlider = document.getElementById('skewSlider');
 const skewValue = document.getElementById('skewValue');
 const skewResetBtn = document.getElementById('skewResetBtn');
-const skewAllBtn = document.getElementById('skewAllBtn');
+const skewApplyBtn = document.getElementById('skewApplyBtn');
 const skewHint = document.getElementById('skewHint');
 const gridToggle = document.getElementById('gridToggle');
 const progressNote = document.getElementById('progressNote');
 const toolbarWrap = document.getElementById('toolbarWrap');
 const toolbar = document.getElementById('toolbar');
+const modeIndicator = document.getElementById('modeIndicator');
 const selectionBar = document.getElementById('selectionBar');
 const selCountLabel = document.getElementById('selCountLabel');
 const tbZoomIn = document.getElementById('tbZoomIn');
@@ -677,12 +712,16 @@ const tbZoomLabel = document.getElementById('tbZoomLabel');
 const tbPeek = document.getElementById('tbPeek');
 const tbCrop = document.getElementById('tbCrop');
 const tbStraighten = document.getElementById('tbStraighten');
+const tbPages = document.getElementById('tbPages');
 const tbUndo = document.getElementById('tbUndo');
 const tbRedo = document.getElementById('tbRedo');
 const tbDuplicate = document.getElementById('tbDuplicate');
 const tbDelete = document.getElementById('tbDelete');
 const cropPop = document.getElementById('cropPop');
 const skewPop = document.getElementById('skewPop');
+const pagesPop = document.getElementById('pagesPop');
+const pageList = document.getElementById('pageList');
+const deletePagesBtn = document.getElementById('deletePagesBtn');
 
 /* ---------- collapsible sidebar sections ---------- */
 
@@ -741,6 +780,7 @@ const cropResetBtn = document.getElementById('cropResetBtn');
 const cropHint = document.getElementById('cropHint');
 
 let pagesData = [];        // {pageNum, canvas, overlay, octx, marks:[], renderScale, viewportPt}
+let documentIsPdf = false;
 let undoStack = [];        // {type:'add'|'remove'|'move'|'resize', pageIndex, mark, ...}
 let redoStack = [];
 let currentColor = '#14100d';
@@ -1010,6 +1050,12 @@ function closePopovers(except) {
     p.pop.classList.remove('open');
     p.btn.classList.remove('open');
   });
+  updateModeUI();
+}
+
+function updateModeUI() {
+  modeIndicator.textContent = cropMode ? 'Cropping' : skewPop.classList.contains('open') ? 'Straightening' : 'Marking';
+  modeIndicator.classList.toggle('cropping', cropMode);
 }
 
 function registerPopover(btn, pop) {
@@ -1019,17 +1065,51 @@ function registerPopover(btn, pop) {
     const isOpen = pop.classList.contains('open');
     closePopovers();
     if (isOpen) return;
+    if (pop !== cropPop && cropMode) exitCropMode(false);
     pop.classList.add('open');
     btn.classList.add('open');
     const max = toolbar.clientWidth - pop.offsetWidth - 6;
     pop.style.left = Math.max(6, Math.min(btn.offsetLeft, max)) + 'px';
+    pop.style.top = (toolbar.offsetHeight + 8) + 'px';
+    updateModeUI();
+  });
+
+  const title = pop.querySelector('.pop-title');
+  title.addEventListener('pointerdown', e => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    title.setPointerCapture(e.pointerId);
+    const left = parseFloat(pop.style.left);
+    const top = parseFloat(pop.style.top);
+    const startX = e.clientX, startY = e.clientY;
+    const move = event => {
+      const toolbarRect = toolbar.getBoundingClientRect();
+      const mainRect = mainEl.getBoundingClientRect();
+      const minX = Math.max(mainRect.left, 0) + 8 - toolbarRect.left;
+      const maxX = Math.min(mainRect.right, window.innerWidth) - 8 - toolbarRect.left - pop.offsetWidth;
+      const minY = Math.max(mainRect.top, 0) + 8 - toolbarRect.top;
+      const maxY = Math.min(mainRect.bottom, window.innerHeight) - 8 - toolbarRect.top - pop.offsetHeight;
+      pop.style.left = Math.max(minX, Math.min(maxX, left + event.clientX - startX)) + 'px';
+      pop.style.top = Math.max(minY, Math.min(maxY, top + event.clientY - startY)) + 'px';
+    };
+    const stop = () => {
+      title.removeEventListener('pointermove', move);
+      title.removeEventListener('pointerup', stop);
+      title.removeEventListener('pointercancel', stop);
+    };
+    title.addEventListener('pointermove', move);
+    title.addEventListener('pointerup', stop);
+    title.addEventListener('pointercancel', stop);
   });
 }
 
 registerPopover(tbCrop, cropPop);
 registerPopover(tbStraighten, skewPop);
+registerPopover(tbPages, pagesPop);
 document.addEventListener('pointerdown', e => {
-  if (!e.target.closest('.popover') && !e.target.closest('.tool.has-menu')) closePopovers();
+  if (e.target.closest('.popover') || e.target.closest('.tool.has-menu')) return;
+  if (e.target.closest('.page') && (cropMode || skewPop.classList.contains('open'))) return;
+  closePopovers();
 });
 
 tbDuplicate.addEventListener('click', duplicateSelected);
@@ -1081,6 +1161,15 @@ mainEl.addEventListener('pointerdown', e => {
 });
 
 window.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && cropMode) {
+    exitCropMode(false);
+    closePopovers();
+    return;
+  }
+  if (e.key === 'Escape' && (cropPop.classList.contains('open') || skewPop.classList.contains('open'))) {
+    closePopovers();
+    return;
+  }
   if (document.activeElement === titleInput || document.activeElement === customColor || document.activeElement === skewSlider) return;
   if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') {
     e.preventDefault();
@@ -1090,8 +1179,10 @@ window.addEventListener('keydown', e => {
   if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'y') { e.preventDefault(); redo(); return; }
 
   if (cropMode) {
-    if (e.key === 'Escape') exitCropMode(false);
-    else if (e.key === 'Enter') exitCropMode(true);
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      exitCropMode(true);
+    }
     return;
   }
 
@@ -1164,11 +1255,14 @@ function resetWorkspace() {
   dropzone.style.display = 'none';
   pagesContainer.innerHTML = '';
   pagesData = [];
+  documentIsPdf = false;
+  pagesToDelete.clear();
   undoStack = [];
   redoStack = [];
   selected = null;
   cropMode = false;
   lastActivePd = null;
+  closePopovers();
   refreshButtons();
   exportBtn.disabled = true;
   saveProgressBtn.disabled = true;
@@ -1223,6 +1317,7 @@ function createPageShell(viewportPt, renderScale, pageNum, totalPages) {
     baseWidth: width, baseHeight: height,
     octx: overlay.getContext('2d'),
     marks: [],
+    deleted: false,
     deskew: 0,
     crop: { x: 0, y: 0, w: viewportPt.width, h: viewportPt.height },
     editCrop: null,
@@ -1232,6 +1327,75 @@ function createPageShell(viewportPt, renderScale, pageNum, totalPages) {
 
   return { canvas, overlay, ctx: srcCanvas.getContext('2d'), pd };
 }
+
+/* ---------- PDF pages ---------- */
+
+const pagesToDelete = new Set();
+
+function updatePageVisibility() {
+  const visible = pagesData.filter(pd => !pd.deleted);
+  pagesData.forEach(pd => { pd.pageWrap.style.display = pd.deleted ? 'none' : ''; });
+  visible.forEach((pd, index) => {
+    const tag = pd.pageWrap.querySelector('.page-num');
+    tag.textContent = `${index + 1} / ${visible.length}`;
+    tag.title = `Source page ${pd.pageNum}`;
+  });
+  if (selected && selected.pd.deleted) selected = null;
+  if (!visible.includes(lastActivePd)) lastActivePd = visible[0] || null;
+}
+
+function updatePageMenu() {
+  pageList.replaceChildren();
+  for (const pd of pagesToDelete) if (pd.deleted) pagesToDelete.delete(pd);
+  const visibleCount = pagesData.filter(pd => !pd.deleted).length;
+  tbPages.style.display = documentIsPdf ? '' : 'none';
+  tbPages.disabled = !documentIsPdf || pagesData.length < 2;
+  pagesData.forEach(pd => {
+    if (pd.deleted) {
+      const row = document.createElement('div');
+      row.className = 'removed-page';
+      const label = document.createElement('span');
+      label.textContent = `Page ${pd.pageNum} (removed)`;
+      const restore = document.createElement('button');
+      restore.type = 'button';
+      restore.textContent = 'Restore';
+      restore.setAttribute('aria-label', `Restore page ${pd.pageNum}`);
+      restore.addEventListener('click', () => {
+        pd.deleted = false;
+        pushUndo({ type: 'pageVisibility', pages: [pd], deleted: false });
+        updatePageVisibility();
+        refreshButtons();
+      });
+      row.append(label, restore);
+      pageList.appendChild(row);
+      return;
+    }
+    const label = document.createElement('label');
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.checked = pagesToDelete.has(pd);
+    checkbox.addEventListener('change', () => {
+      if (checkbox.checked) pagesToDelete.add(pd);
+      else pagesToDelete.delete(pd);
+      deletePagesBtn.disabled = !pagesToDelete.size || pagesToDelete.size >= visibleCount;
+    });
+    label.append(checkbox, document.createTextNode(`Page ${pd.pageNum}`));
+    pageList.appendChild(label);
+  });
+  deletePagesBtn.disabled = !pagesToDelete.size || pagesToDelete.size >= visibleCount;
+}
+
+deletePagesBtn.addEventListener('click', () => {
+  const removing = pagesData.filter(pd => pagesToDelete.has(pd) && !pd.deleted);
+  if (!removing.length || removing.length >= pagesData.filter(pd => !pd.deleted).length) return;
+  if (!confirm(`Delete ${removing.map(pd => `page ${pd.pageNum}`).join(', ')} from the exported PDF?`)) return;
+  removing.forEach(pd => { pd.deleted = true; });
+  pushUndo({ type: 'pageVisibility', pages: removing, deleted: true });
+  pagesToDelete.clear();
+  updatePageVisibility();
+  refreshButtons();
+  statusEl.textContent = `Removed pages ${removing.map(pd => pd.pageNum).join(', ')} from export. Undo to restore.`;
+});
 
 /* ---------- cropping ---------- */
 
@@ -1293,6 +1457,7 @@ function applyDeskew(pd) {
 
 async function loadPdf(file) {
   resetWorkspace();
+  documentIsPdf = true;
   try {
     const buf = await file.arrayBuffer();
     const pdfDoc = await pdfjsLib.getDocument({ data: buf }).promise;
@@ -1566,8 +1731,9 @@ function isFullCrop(pd) {
 
 function updateCropUI() {
   const pd = currentPage();
+  updateModeUI();
   cropBtn.disabled = !pd;
-  cropBtn.textContent = cropMode ? 'Cancel crop' : 'Crop pages…';
+  cropBtn.textContent = cropMode ? 'Cancel crop' : 'Start crop';
   cropBtn.classList.toggle('primary', cropMode);
   tbCrop.classList.toggle('active', cropMode);
   cropActions.style.display = cropMode ? '' : 'none';
@@ -1596,24 +1762,29 @@ function enterCropMode() {
 
 function exitCropMode(commit) {
   if (!cropMode) return;
+  const activePage = currentPage();
   cropMode = false;
   pagesData.forEach(pd => {
-    if (commit && pd.editCrop) pd.crop = cropToPt(pd, normalizeRect(pd.editCrop));
+    if (commit && pd === activePage && pd.editCrop) pd.crop = cropToPt(pd, normalizeRect(pd.editCrop));
     pd.editCrop = null;
     resizePage(pd);
   });
+  if (commit) closePopovers();
   updateCropUI();
   persistSession();
 }
 
-cropBtn.addEventListener('click', () => cropMode ? exitCropMode(false) : enterCropMode());
+cropBtn.addEventListener('click', () => {
+  if (cropMode) { exitCropMode(false); closePopovers(); }
+  else enterCropMode();
+});
 cropApplyBtn.addEventListener('click', () => exitCropMode(true));
 cropResetBtn.addEventListener('click', () => {
-  pagesData.forEach(pd => {
-    pd.crop = fullCrop(pd);
-    if (cropMode) pd.editCrop = cropToPx(pd, pd.crop);
-    resizePage(pd);
-  });
+  const pd = currentPage();
+  if (!pd) return;
+  pd.crop = fullCrop(pd);
+  if (cropMode) pd.editCrop = cropToPx(pd, pd.crop);
+  resizePage(pd);
   updateCropUI();
   persistSession();
 });
@@ -1629,7 +1800,7 @@ function updateSkewUI() {
   const enabled = !!pd;
   skewSlider.disabled = !enabled;
   skewResetBtn.disabled = !enabled || !pd.deskew;
-  skewAllBtn.disabled = !enabled || pagesData.length < 2;
+  skewApplyBtn.disabled = !enabled;
   if (!pd) { skewValue.textContent = '0.0°'; return; }
   skewSlider.value = pd.deskew;
   skewValue.textContent = `${pd.deskew > 0 ? '+' : ''}${pd.deskew.toFixed(1)}°`;
@@ -1671,11 +1842,12 @@ skewResetBtn.addEventListener('click', () => {
   updateSkewUI();
   persistSession();
 });
-skewAllBtn.addEventListener('click', () => {
-  const pd = currentPage();
-  if (!pd) return;
-  pagesData.forEach(p => { if (p !== pd) setDeskew(p, pd.deskew); });
-  persistSession();
+skewApplyBtn.addEventListener('click', () => {
+  gridToggle.checked = false;
+  adjustingSkew = false;
+  updateGrid();
+  closePopovers();
+  saveProgress();
 });
 
 // Marks always live in full-page canvas pixels, so the crop offset is added back here.
@@ -1920,12 +2092,17 @@ function deleteSelected() {
 function attachPointerHandlers(overlay, pd) {
   overlay.addEventListener('pointerdown', e => {
     if (!pagesData.length) return;
-    overlay.setPointerCapture(e.pointerId);
     const pos = getPos(e, pd);
     activePage = pd;
     lastActivePd = pd;
     startPos = pos;
     updateSkewUI();
+
+    if (skewPop.classList.contains('open') && !cropMode) {
+      activePage = null;
+      return;
+    }
+    overlay.setPointerCapture(e.pointerId);
 
     if (cropMode) {
       const handle = handleAt(pd.editCrop, pos, true);
@@ -2219,6 +2396,13 @@ function captureAfter(action) {
 }
 
 function applyAction(action, redoing) {
+  if (action.type === 'pageVisibility') {
+    const removed = redoing ? action.deleted : !action.deleted;
+    action.pages.forEach(pd => { pd.deleted = removed; });
+    updatePageVisibility();
+    statusEl.textContent = `${action.pages.map(pd => pd.pageNum).join(', ')} ${removed ? 'removed' : 'restored'}.`;
+    return;
+  }
   if (action.type === 'colorAll') {
     action.changes.forEach((c, i) => { c.mark.color = redoing ? action.after[i] : c.before; });
     pagesData.forEach(pd => redraw(pd));
@@ -2327,6 +2511,7 @@ function refreshButtons() {
   tbDuplicate.disabled = !n;
   tbDelete.disabled = !n;
 
+  updatePageMenu();
   updateSkewUI();
   updateCropUI();
   persistSession();
@@ -2414,6 +2599,7 @@ function buildProgressPayload() {
     pages: pagesData.map(pd => ({
       width: Math.round(pd.viewportPt.width * 100) / 100,
       height: Math.round(pd.viewportPt.height * 100) / 100,
+      deleted: pd.deleted,
       deskew: pd.deskew || 0,
       crop: { x: pd.crop.x, y: pd.crop.y, w: pd.crop.w, h: pd.crop.h },
       marks: pd.marks.map(m => ({
@@ -2504,6 +2690,7 @@ function applyProgress(data) {
   data.pages.forEach((saved, idx) => {
     const pd = pagesData[idx];
     if (!pd) return;
+    pd.deleted = !!saved.deleted;
     if (Math.abs(pd.viewportPt.width - saved.width) > 2 || Math.abs(pd.viewportPt.height - saved.height) > 2) {
       mismatched = true;
     }
@@ -2523,6 +2710,8 @@ function applyProgress(data) {
     touched++;
     redraw(pd);
   });
+  if (pagesData.every(pd => pd.deleted)) pagesData[0].deleted = false;
+  updatePageVisibility();
   undoStack = [];
   redoStack = [];
   selected = null;
@@ -2543,8 +2732,9 @@ async function exportPdf() {
   try {
     const { jsPDF } = window.jspdf;
     let doc = null;
-    for (let i = 0; i < pagesData.length; i++) {
-      const pd = pagesData[i];
+    const visiblePages = pagesData.filter(pd => !pd.deleted);
+    for (let i = 0; i < visiblePages.length; i++) {
+      const pd = visiblePages[i];
       const wPt = pd.crop.w;
       const hPt = pd.crop.h;
 
