@@ -169,61 +169,85 @@
   #customColor::-webkit-color-swatch { border: none; border-radius: 5px; }
   #customColor::-moz-color-swatch { border: none; border-radius: 5px; }
 
-  .check-row { display: flex; align-items: center; gap: 8px; font-size: 0.86rem; color: var(--sidebar-text); cursor: pointer; }
+  .check-row { display: flex; align-items: center; gap: 8px; font-size: 0.84rem; color: var(--ink); cursor: pointer; margin-bottom: 8px; }
   .check-row input { accent-color: var(--accent); width: 16px; height: 16px; }
+
+  .skew-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .skew-row input[type="range"] { flex: 1; accent-color: var(--accent); min-width: 0; }
+  .skew-value {
+    font-size: 0.78rem;
+    color: var(--ink);
+    min-width: 46px;
+    text-align: right;
+  }
 
   .hint { font-size: 0.76rem; color: var(--sidebar-muted); line-height: 1.45; margin: 8px 0 0; }
 
   .depth-picker { position: relative; }
-  .depth-btn { display: flex; align-items: center; gap: 10px; }
+  .depth-btn {
+    display: flex; align-items: center; gap: 7px;
+    height: 34px;
+    padding: 0 8px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    color: var(--ink-soft);
+    font-family: "Source Serif 4", serif;
+    cursor: pointer;
+  }
+  .depth-btn:hover:not(:disabled) { background: rgba(43,48,56,0.08); color: var(--ink); }
+  .depth-btn:disabled { opacity: 0.3; cursor: not-allowed; }
   .depth-swatch {
     flex: 0 0 auto;
-    width: 46px; height: 24px;
+    width: 30px; height: 22px;
     display: flex; align-items: center; justify-content: center;
-    background: rgba(0,0,0,0.18);
+    background: rgba(43,48,56,0.1);
     border-radius: 3px;
   }
-  .depth-bar { display: block; width: 32px; background: var(--sidebar-text); border-radius: 1px; }
-  .depth-btn-label { flex: 1; font-size: 0.85rem; }
-  .depth-caret { font-size: 0.65rem; color: var(--sidebar-muted); }
+  .depth-bar { display: block; width: 20px; background: currentColor; border-radius: 1px; }
+  .depth-btn-label { font-size: 0.82rem; white-space: nowrap; }
+  .depth-caret { font-size: 0.6rem; opacity: 0.7; }
   .depth-panel {
     display: none;
     position: absolute;
-    left: 0; right: 0;
-    margin-top: 6px;
-    background: #414956;
-    border: 1px solid var(--sidebar-border);
-    border-radius: 6px;
-    box-shadow: 0 10px 26px rgba(0,0,0,0.35);
+    left: 0;
+    top: calc(100% + 8px);
+    width: 210px;
+    background: #fff;
+    border: 1px solid rgba(43,48,56,0.18);
+    border-radius: 8px;
+    box-shadow: 0 10px 26px var(--shadow);
     padding: 6px;
-    z-index: 20;
+    z-index: 40;
   }
   .depth-panel.open { display: block; }
   .depth-row {
     display: flex; align-items: center; gap: 10px;
-    padding: 7px 8px;
-    border-radius: 4px;
+    padding: 6px 8px;
+    border-radius: 5px;
     cursor: pointer;
   }
-  .depth-row:hover { background: rgba(255,255,255,0.09); }
-  .depth-row.active { background: var(--accent); }
-  .depth-row-label { font-size: 0.82rem; color: var(--sidebar-text); }
-  .depth-divider { height: 1px; background: rgba(255,255,255,0.14); margin: 6px 2px; }
+  .depth-row:hover { background: rgba(43,48,56,0.08); }
+  .depth-row.active { background: var(--accent); color: #fff; }
+  .depth-row.active .depth-row-label { color: #fff; }
+  .depth-row.active .depth-swatch { background: rgba(255,255,255,0.25); }
+  .depth-row-label { font-size: 0.82rem; color: var(--ink); }
+  .depth-divider { height: 1px; background: rgba(43,48,56,0.14); margin: 6px 2px; }
   .depth-custom-row { display: flex; align-items: center; gap: 8px; padding: 4px 6px 2px; }
   .depth-custom-row input[type="number"] {
     width: 56px;
-    background: rgba(0,0,0,0.22);
-    border: 1px solid var(--sidebar-border);
+    background: #fff;
+    border: 1px solid rgba(43,48,56,0.25);
     border-radius: 4px;
-    color: var(--sidebar-text);
+    color: var(--ink);
     font-family: "Source Serif 4", serif;
     font-size: 0.85rem;
     padding: 5px 6px;
   }
-  .depth-custom-unit { font-size: 0.78rem; color: var(--sidebar-muted); }
+  .depth-custom-unit { font-size: 0.78rem; color: var(--ink-soft); }
   .depth-custom-btn {
     margin-left: auto;
-    background: linear-gradient(var(--accent-hi), var(--accent));
+    background: var(--accent);
     border: 1px solid var(--accent);
     color: #fff;
     font-size: 0.78rem;
@@ -258,11 +282,19 @@
   .file-note { font-size: 0.74rem; color: var(--sidebar-muted); margin: 8px 0 0; word-break: break-all; }
 
   /* ---------- Main viewer ---------- */
-  #toolbar {
+  #toolbarWrap {
     position: sticky;
     top: 0;
     z-index: 30;
     display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    max-width: 100%;
+  }
+  #toolbar, #selectionBar {
+    position: relative;
+    display: flex;
     align-items: center;
     flex-wrap: wrap;
     justify-content: center;
@@ -270,11 +302,59 @@
     gap: 4px;
     padding: 6px;
     border-radius: 9px;
-    background: rgba(255,255,255,0.92);
+    background: rgba(255,255,255,0.94);
     border: 1px solid rgba(43,48,56,0.16);
     box-shadow: 0 3px 10px var(--shadow);
     backdrop-filter: blur(6px);
   }
+  #selectionBar { display: none; border-color: rgba(74,144,217,0.45); }
+  .sel-count {
+    font-size: 0.8rem;
+    color: var(--ink-soft);
+    padding: 0 6px;
+    white-space: nowrap;
+  }
+  .popover {
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    width: 240px;
+    background: #fff;
+    border: 1px solid rgba(43,48,56,0.18);
+    border-radius: 8px;
+    box-shadow: 0 10px 26px var(--shadow);
+    padding: 10px;
+    z-index: 40;
+    text-align: left;
+  }
+  .popover.open { display: block; }
+  .pop-title {
+    font-family: "Special Elite", monospace;
+    font-size: 0.66rem;
+    letter-spacing: 0.06em;
+    color: var(--ink-soft);
+    margin: 0 0 8px;
+  }
+  .pop-btn {
+    display: block;
+    width: 100%;
+    margin-bottom: 6px;
+    padding: 8px 10px;
+    font-family: "Source Serif 4", serif;
+    font-size: 0.86rem;
+    color: var(--ink);
+    background: #f2f2f0;
+    border: 1px solid rgba(43,48,56,0.2);
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .pop-btn:hover:not(:disabled) { background: #e7e7e4; }
+  .pop-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .pop-btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .pop-btn.primary:hover { background: var(--accent-hi); }
+  .pop-row { display: flex; gap: 6px; }
+  .pop-row .pop-btn { flex: 1; }
+  .pop-hint { font-size: 0.74rem; color: var(--ink-soft); line-height: 1.4; margin: 6px 0 0; }
   .tool {
     width: 34px; height: 34px;
     display: flex; align-items: center; justify-content: center;
@@ -292,6 +372,7 @@
   .tool:hover:not(:disabled) { background: rgba(43,48,56,0.08); color: var(--ink); }
   .tool:active:not(:disabled) { background: rgba(43,48,56,0.16); }
   .tool.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .tool.open, .depth-btn.open { background: rgba(43,48,56,0.14); color: var(--ink); }
   .tool:disabled { opacity: 0.3; cursor: not-allowed; }
   .tool-sep { width: 1px; height: 20px; background: rgba(43,48,56,0.18); margin: 0 4px; }
   .zoom-readout {
@@ -353,16 +434,6 @@
   .page .pdf-layer { position: relative; }
   .page .mark-layer { touch-action: none; cursor: crosshair; }
 
-  .skew-row { display: flex; align-items: center; gap: 8px; }
-  .skew-row input[type="range"] { flex: 1; accent-color: var(--accent); }
-  .skew-value {
-    font-family: "Special Elite", monospace;
-    font-size: 0.72rem;
-    color: var(--sidebar-text);
-    min-width: 52px;
-    text-align: right;
-  }
-
   .page-chrome { position: absolute; top: 8px; right: 8px; display: flex; gap: 6px; z-index: 5; }
   .page-num {
     font-family: "Special Elite", monospace;
@@ -397,78 +468,12 @@
     <p class="section-label">document</p>
     <button id="fileBtn" type="button">Choose a PDF or .txt…</button>
     <div style="height:8px;"></div>
-    <button id="newBtn" class="btn" type="button">Start over</button>
+    <div class="btn-row">
+      <button id="newBtn" class="btn" type="button">Start over</button>
+      <button id="clearAllBtn" class="btn" type="button" disabled>Clear marks</button>
+    </div>
     <input id="fileInput" type="file" accept="application/pdf,.pdf,text/plain,.txt">
     <p id="status" style="margin-top:10px;"></p>
-  </div>
-
-  <div class="section">
-    <p class="section-label">mark color</p>
-    <button id="applyAllBtn" class="btn" type="button" disabled>Apply color to all blocks</button>
-    <p class="hint">Pick the color in the toolbar above the document.</p>
-  </div>
-
-  <div class="section">
-    <p class="section-label">block size</p>
-    <div class="depth-picker" id="depthPicker">
-      <button id="depthBtn" class="btn depth-btn" type="button" aria-haspopup="listbox" aria-expanded="false">
-        <span class="depth-swatch"><span id="depthBtnBar" class="depth-bar"></span></span>
-        <span id="depthBtnLabel" class="depth-btn-label">16 pt</span>
-        <span class="depth-caret">▾</span>
-      </button>
-      <div id="depthPanel" class="depth-panel" role="listbox" aria-label="Redaction depth presets">
-        <div id="depthPresetList"></div>
-        <div class="depth-divider"></div>
-        <div class="depth-custom-row">
-          <input id="customDepthInput" type="number" min="4" max="200" step="1" inputmode="numeric" aria-label="Custom depth in points">
-          <span class="depth-custom-unit">pt</span>
-          <button id="customDepthApply" class="depth-custom-btn" type="button">Set</button>
-        </div>
-      </div>
-    </div>
-
-    <p class="hint">Every block keeps the same depth, so your lines stay lined up. Pick a preset here — if a block's selected, it's applied right away.</p>
-    <div style="height:10px;"></div>
-    <button id="applySizeAllBtn" class="btn" type="button" disabled>Apply size to all blocks</button>
-  </div>
-
-  <div class="section">
-    <p class="section-label">crop</p>
-    <button id="cropBtn" class="btn" type="button" disabled>Crop pages…</button>
-    <div id="cropActions" style="display:none;">
-      <div style="height:8px;"></div>
-      <button id="cropApplyBtn" class="btn" type="button">Apply crop</button>
-    </div>
-    <div style="height:8px;"></div>
-    <button id="cropResetBtn" class="btn" type="button" disabled>Reset crop</button>
-    <p class="hint" id="cropHint">Trim the margins off your pages.</p>
-  </div>
-
-  <div class="section">
-    <p class="section-label">straighten</p>
-    <div class="skew-row">
-      <input id="skewSlider" type="range" min="-5" max="5" step="0.1" value="0" disabled aria-label="Rotate page">
-      <span id="skewValue" class="skew-value">0.0°</span>
-    </div>
-    <div style="height:8px;"></div>
-    <label class="check-row"><input id="gridToggle" type="checkbox"> Show alignment grid</label>
-    <div style="height:8px;"></div>
-    <div class="btn-row">
-      <button id="skewResetBtn" class="btn" type="button" disabled>Reset</button>
-      <button id="skewAllBtn" class="btn" type="button" disabled>Apply to all</button>
-    </div>
-    <p class="hint" id="skewHint">Nudge a crooked scan level. Turn on the grid and line the text up with a horizontal rule.</p>
-  </div>
-
-  <div class="section">
-    <p class="section-label">arrange</p>
-    <button class="btn" type="button" data-arrange="stackLines" disabled title="Align left, match width, and space evenly">Stack as lines</button>
-    <p class="hint" id="arrangeHint">Shift-click blocks to select several, or Alt-drag a box around them.</p>
-  </div>
-
-  <div class="section btn-row">
-    <button id="undoBtn" class="btn" type="button" disabled>Undo</button>
-    <button id="clearAllBtn" class="btn" type="button" disabled>Clear all</button>
   </div>
 
   <div class="section">
@@ -491,71 +496,135 @@
 </aside>
 
 <main id="main">
-  <div id="toolbar" aria-label="Document tools">
-    <button class="tool" id="tbZoomOut" type="button" disabled title="Zoom out" aria-label="Zoom out">
-      <svg viewBox="0 0 20 20"><circle cx="8.5" cy="8.5" r="5.5"/><line x1="12.6" y1="12.6" x2="17.5" y2="17.5"/><line x1="6" y1="8.5" x2="11" y2="8.5"/></svg>
-    </button>
-    <button class="zoom-readout" id="tbZoomLabel" type="button" disabled title="Reset to 100%">100%</button>
-    <button class="tool" id="tbZoomIn" type="button" disabled title="Zoom in" aria-label="Zoom in">
-      <svg viewBox="0 0 20 20"><circle cx="8.5" cy="8.5" r="5.5"/><line x1="12.6" y1="12.6" x2="17.5" y2="17.5"/><line x1="6" y1="8.5" x2="11" y2="8.5"/><line x1="8.5" y1="6" x2="8.5" y2="11"/></svg>
-    </button>
-    <span class="tool-sep"></span>
-    <button class="swatch active" data-color="#14100d" style="background:#14100d" type="button" title="Black marks" aria-label="Black marks"></button>
-    <button class="swatch" data-color="#f7f3e8" style="background:#f7f3e8" type="button" title="White marks" aria-label="White marks"></button>
-    <input id="customColor" type="color" value="#14100d" title="Custom mark color" aria-label="Custom mark color">
-    <span class="tool-sep"></span>
-    <button class="tool" id="tbPeek" type="button" title="Hold to peek under the blocks" aria-label="Hold to peek">
-      <svg viewBox="0 0 20 20"><path d="M1.5 10S5 4.5 10 4.5 18.5 10 18.5 10 15 15.5 10 15.5 1.5 10 1.5 10Z"/><circle cx="10" cy="10" r="2.5"/></svg>
-    </button>
-    <button class="tool" id="tbCrop" type="button" title="Crop pages" aria-label="Crop pages">
-      <svg viewBox="0 0 20 20"><path d="M6 1.5v12.5h12.5"/><path d="M1.5 6H14v12.5"/></svg>
-    </button>
-    <button class="tool" id="tbStraighten" type="button" title="Straighten pages" aria-label="Straighten pages">
-      <svg viewBox="0 0 20 20"><line x1="2" y1="16.5" x2="18" y2="16.5"/><line x1="2.5" y1="11.5" x2="17.5" y2="4.5"/><line x1="2.5" y1="9.5" x2="2.5" y2="13.5"/><line x1="17.5" y1="2.5" x2="17.5" y2="6.5"/></svg>
-    </button>
-    <span class="tool-sep"></span>
-    <button class="tool" id="tbUndo" type="button" disabled title="Undo" aria-label="Undo">
-      <svg viewBox="0 0 20 20"><path d="M6.5 4.5 2.5 8.5l4 4"/><path d="M2.5 8.5h8.5a4.5 4.5 0 0 1 0 9H7"/></svg>
-    </button>
-    <button class="tool" id="tbRedo" type="button" disabled title="Redo" aria-label="Redo">
-      <svg viewBox="0 0 20 20"><path d="M13.5 4.5l4 4-4 4"/><path d="M17.5 8.5H9a4.5 4.5 0 0 0 0 9h4"/></svg>
-    </button>
-    <span class="tool-sep"></span>
-    <button class="tool tool-arrange" type="button" data-arrange="alignLeft" disabled title="Align left" aria-label="Align left">
-      <svg viewBox="0 0 20 20"><line x1="3" y1="2" x2="3" y2="18"/><rect x="3.8" y="4" width="12" height="3.4"/><rect x="3.8" y="12.6" width="8" height="3.4"/></svg>
-    </button>
-    <button class="tool tool-arrange" type="button" data-arrange="alignCenterH" disabled title="Align centers horizontally" aria-label="Align centers horizontally">
-      <svg viewBox="0 0 20 20"><line x1="10" y1="2" x2="10" y2="18"/><rect x="4" y="4" width="12" height="3.4"/><rect x="6" y="12.6" width="8" height="3.4"/></svg>
-    </button>
-    <button class="tool tool-arrange" type="button" data-arrange="alignRight" disabled title="Align right" aria-label="Align right">
-      <svg viewBox="0 0 20 20"><line x1="17" y1="2" x2="17" y2="18"/><rect x="4.2" y="4" width="12" height="3.4"/><rect x="8.2" y="12.6" width="8" height="3.4"/></svg>
-    </button>
-    <button class="tool tool-arrange" type="button" data-arrange="alignTop" disabled title="Align top" aria-label="Align top">
-      <svg viewBox="0 0 20 20"><line x1="2" y1="3" x2="18" y2="3"/><rect x="4" y="3.8" width="3.4" height="12"/><rect x="12.6" y="3.8" width="3.4" height="8"/></svg>
-    </button>
-    <button class="tool tool-arrange" type="button" data-arrange="alignMiddleV" disabled title="Align middles vertically" aria-label="Align middles vertically">
-      <svg viewBox="0 0 20 20"><line x1="2" y1="10" x2="18" y2="10"/><rect x="4" y="4" width="3.4" height="12"/><rect x="12.6" y="6" width="3.4" height="8"/></svg>
-    </button>
-    <button class="tool tool-arrange" type="button" data-arrange="alignBottom" disabled title="Align bottom" aria-label="Align bottom">
-      <svg viewBox="0 0 20 20"><line x1="2" y1="17" x2="18" y2="17"/><rect x="4" y="4.2" width="3.4" height="12"/><rect x="12.6" y="8.2" width="3.4" height="8"/></svg>
-    </button>
-    <button class="tool tool-arrange" type="button" data-arrange="distributeV" disabled title="Space evenly, top to bottom" aria-label="Space evenly, top to bottom">
-      <svg viewBox="0 0 20 20"><rect x="3" y="2.5" width="14" height="3"/><rect x="3" y="8.5" width="14" height="3"/><rect x="3" y="14.5" width="14" height="3"/></svg>
-    </button>
-    <button class="tool tool-arrange" type="button" data-arrange="distributeH" disabled title="Space evenly, left to right" aria-label="Space evenly, left to right">
-      <svg viewBox="0 0 20 20"><rect x="2.5" y="3" width="3" height="14"/><rect x="8.5" y="3" width="3" height="14"/><rect x="14.5" y="3" width="3" height="14"/></svg>
-    </button>
-    <button class="tool tool-arrange" type="button" data-arrange="matchWidth" disabled title="Match the widest block" aria-label="Match the widest block">
-      <svg viewBox="0 0 20 20"><line x1="2.5" y1="2" x2="2.5" y2="18"/><line x1="17.5" y1="2" x2="17.5" y2="18"/><rect x="3" y="4" width="14" height="3.4"/><rect x="3" y="12.6" width="14" height="3.4"/></svg>
-    </button>
-    <button class="tool tool-arrange" type="button" data-arrange="stackLines" disabled title="Stack as lines: align left, match width, space evenly" aria-label="Stack as lines">
-      <svg viewBox="0 0 20 20"><line x1="2.5" y1="2" x2="2.5" y2="18"/><rect x="3.2" y="3" width="13" height="3"/><rect x="3.2" y="8.5" width="13" height="3"/><rect x="3.2" y="14" width="13" height="3"/></svg>
-    </button>
+  <div id="toolbarWrap">
+    <div id="toolbar" aria-label="Document tools">
+      <button class="tool" id="tbZoomOut" type="button" disabled title="Zoom out" aria-label="Zoom out">
+        <svg viewBox="0 0 20 20"><circle cx="8.5" cy="8.5" r="5.5"/><line x1="12.6" y1="12.6" x2="17.5" y2="17.5"/><line x1="6" y1="8.5" x2="11" y2="8.5"/></svg>
+      </button>
+      <button class="zoom-readout" id="tbZoomLabel" type="button" disabled title="Reset to 100%">100%</button>
+      <button class="tool" id="tbZoomIn" type="button" disabled title="Zoom in" aria-label="Zoom in">
+        <svg viewBox="0 0 20 20"><circle cx="8.5" cy="8.5" r="5.5"/><line x1="12.6" y1="12.6" x2="17.5" y2="17.5"/><line x1="6" y1="8.5" x2="11" y2="8.5"/><line x1="8.5" y1="6" x2="8.5" y2="11"/></svg>
+      </button>
+      <button class="tool" id="tbPeek" type="button" disabled title="Peek under the blocks — click to toggle, hold for a glance" aria-label="Peek under the blocks">
+        <svg viewBox="0 0 20 20"><path d="M1.5 10S5 4.5 10 4.5 18.5 10 18.5 10 15 15.5 10 15.5 1.5 10 1.5 10Z"/><circle cx="10" cy="10" r="2.5"/></svg>
+      </button>
+
+      <span class="tool-sep"></span>
+
+      <button class="tool has-menu" id="tbCrop" type="button" disabled title="Crop pages" aria-label="Crop pages" aria-haspopup="dialog">
+        <svg viewBox="0 0 20 20"><path d="M6 1.5v12.5h12.5"/><path d="M1.5 6H14v12.5"/></svg>
+      </button>
+      <button class="tool has-menu" id="tbStraighten" type="button" disabled title="Straighten pages" aria-label="Straighten pages" aria-haspopup="dialog">
+        <svg viewBox="0 0 20 20"><line x1="2" y1="16.5" x2="18" y2="16.5"/><line x1="2.5" y1="11.5" x2="17.5" y2="4.5"/><line x1="2.5" y1="9.5" x2="2.5" y2="13.5"/><line x1="17.5" y1="2.5" x2="17.5" y2="6.5"/></svg>
+      </button>
+
+      <span class="tool-sep"></span>
+
+      <button class="swatch active" data-color="#14100d" style="background:#14100d" type="button" title="Black marks" aria-label="Black marks"></button>
+      <button class="swatch" data-color="#f7f3e8" style="background:#f7f3e8" type="button" title="White marks" aria-label="White marks"></button>
+      <input id="customColor" type="color" value="#14100d" title="Custom mark color" aria-label="Custom mark color">
+      <button class="tool" id="applyAllBtn" type="button" disabled title="Apply this color to every block" aria-label="Apply this color to every block">
+        <svg viewBox="0 0 20 20"><path d="M3.5 9.5 9 4l6.5 6.5-5.5 5.5z"/><path d="M6.5 6.5 5 5"/><path d="M16.5 13.5c1 1.4 1.3 2.2 1.3 2.8a1.3 1.3 0 0 1-2.6 0c0-.6.3-1.4 1.3-2.8Z"/></svg>
+      </button>
+      <div class="depth-picker" id="depthPicker">
+        <button id="depthBtn" class="depth-btn" type="button" disabled aria-haspopup="listbox" aria-expanded="false" title="Block depth">
+          <span class="depth-swatch"><span id="depthBtnBar" class="depth-bar"></span></span>
+          <span id="depthBtnLabel" class="depth-btn-label">16 pt</span>
+          <span class="depth-caret">▾</span>
+        </button>
+        <div id="depthPanel" class="depth-panel" role="listbox" aria-label="Redaction depth presets">
+          <div id="depthPresetList"></div>
+          <div class="depth-divider"></div>
+          <div class="depth-custom-row">
+            <input id="customDepthInput" type="number" min="4" max="200" step="1" inputmode="numeric" aria-label="Custom depth in points">
+            <span class="depth-custom-unit">pt</span>
+            <button id="customDepthApply" class="depth-custom-btn" type="button">Set</button>
+          </div>
+          <div class="depth-divider"></div>
+          <button id="applySizeAllBtn" class="pop-btn" type="button" disabled>Apply size to all blocks</button>
+        </div>
+      </div>
+
+      <span class="tool-sep"></span>
+
+      <button class="tool" id="tbUndo" type="button" disabled title="Undo" aria-label="Undo">
+        <svg viewBox="0 0 20 20"><path d="M6.5 4.5 2.5 8.5l4 4"/><path d="M2.5 8.5h8.5a4.5 4.5 0 0 1 0 9H7"/></svg>
+      </button>
+      <button class="tool" id="tbRedo" type="button" disabled title="Redo" aria-label="Redo">
+        <svg viewBox="0 0 20 20"><path d="M13.5 4.5l4 4-4 4"/><path d="M17.5 8.5H9a4.5 4.5 0 0 0 0 9h4"/></svg>
+      </button>
+
+      <div class="popover" id="cropPop" role="dialog" aria-label="Crop options">
+        <p class="pop-title">Crop</p>
+        <button id="cropBtn" class="pop-btn" type="button" disabled>Crop pages…</button>
+        <div id="cropActions" style="display:none;">
+          <button id="cropApplyBtn" class="pop-btn primary" type="button">Apply crop</button>
+        </div>
+        <button id="cropResetBtn" class="pop-btn" type="button" disabled>Reset crop</button>
+        <p class="pop-hint" id="cropHint">Trim the margins off your pages.</p>
+      </div>
+
+      <div class="popover" id="skewPop" role="dialog" aria-label="Straighten options">
+        <p class="pop-title">Straighten</p>
+        <div class="skew-row">
+          <input id="skewSlider" type="range" min="-5" max="5" step="0.1" value="0" disabled aria-label="Rotate page">
+          <span id="skewValue" class="skew-value">0.0°</span>
+        </div>
+        <label class="check-row"><input id="gridToggle" type="checkbox"> Show alignment grid</label>
+        <div class="pop-row">
+          <button id="skewResetBtn" class="pop-btn" type="button" disabled>Reset</button>
+          <button id="skewAllBtn" class="pop-btn" type="button" disabled>Apply to all</button>
+        </div>
+        <p class="pop-hint" id="skewHint">Nudge a crooked scan level.</p>
+      </div>
+    </div>
+
+    <div id="selectionBar" aria-label="Selected block tools">
+      <span class="sel-count" id="selCountLabel">1 block selected</span>
+      <span class="tool-sep"></span>
+      <button class="tool tool-arrange" type="button" data-arrange="alignLeft" disabled title="Align left" aria-label="Align left">
+        <svg viewBox="0 0 20 20"><line x1="3" y1="2" x2="3" y2="18"/><rect x="3.8" y="4" width="12" height="3.4"/><rect x="3.8" y="12.6" width="8" height="3.4"/></svg>
+      </button>
+      <button class="tool tool-arrange" type="button" data-arrange="alignCenterH" disabled title="Align centers horizontally" aria-label="Align centers horizontally">
+        <svg viewBox="0 0 20 20"><line x1="10" y1="2" x2="10" y2="18"/><rect x="4" y="4" width="12" height="3.4"/><rect x="6" y="12.6" width="8" height="3.4"/></svg>
+      </button>
+      <button class="tool tool-arrange" type="button" data-arrange="alignRight" disabled title="Align right" aria-label="Align right">
+        <svg viewBox="0 0 20 20"><line x1="17" y1="2" x2="17" y2="18"/><rect x="4.2" y="4" width="12" height="3.4"/><rect x="8.2" y="12.6" width="8" height="3.4"/></svg>
+      </button>
+      <button class="tool tool-arrange" type="button" data-arrange="alignTop" disabled title="Align top" aria-label="Align top">
+        <svg viewBox="0 0 20 20"><line x1="2" y1="3" x2="18" y2="3"/><rect x="4" y="3.8" width="3.4" height="12"/><rect x="12.6" y="3.8" width="3.4" height="8"/></svg>
+      </button>
+      <button class="tool tool-arrange" type="button" data-arrange="alignMiddleV" disabled title="Align middles vertically" aria-label="Align middles vertically">
+        <svg viewBox="0 0 20 20"><line x1="2" y1="10" x2="18" y2="10"/><rect x="4" y="4" width="3.4" height="12"/><rect x="12.6" y="6" width="3.4" height="8"/></svg>
+      </button>
+      <button class="tool tool-arrange" type="button" data-arrange="alignBottom" disabled title="Align bottom" aria-label="Align bottom">
+        <svg viewBox="0 0 20 20"><line x1="2" y1="17" x2="18" y2="17"/><rect x="4" y="4.2" width="3.4" height="12"/><rect x="12.6" y="8.2" width="3.4" height="8"/></svg>
+      </button>
+      <button class="tool tool-arrange" type="button" data-arrange="distributeV" disabled title="Space evenly, top to bottom" aria-label="Space evenly, top to bottom">
+        <svg viewBox="0 0 20 20"><rect x="3" y="2.5" width="14" height="3"/><rect x="3" y="8.5" width="14" height="3"/><rect x="3" y="14.5" width="14" height="3"/></svg>
+      </button>
+      <button class="tool tool-arrange" type="button" data-arrange="distributeH" disabled title="Space evenly, left to right" aria-label="Space evenly, left to right">
+        <svg viewBox="0 0 20 20"><rect x="2.5" y="3" width="3" height="14"/><rect x="8.5" y="3" width="3" height="14"/><rect x="14.5" y="3" width="3" height="14"/></svg>
+      </button>
+      <button class="tool tool-arrange" type="button" data-arrange="matchWidth" disabled title="Match the widest block" aria-label="Match the widest block">
+        <svg viewBox="0 0 20 20"><line x1="2.5" y1="2" x2="2.5" y2="18"/><line x1="17.5" y1="2" x2="17.5" y2="18"/><rect x="3" y="4" width="14" height="3.4"/><rect x="3" y="12.6" width="14" height="3.4"/></svg>
+      </button>
+      <button class="tool tool-arrange" type="button" data-arrange="stackLines" disabled title="Stack as lines: align left, match width, space evenly" aria-label="Stack as lines">
+        <svg viewBox="0 0 20 20"><line x1="2.5" y1="2" x2="2.5" y2="18"/><rect x="3.2" y="3" width="13" height="3"/><rect x="3.2" y="8.5" width="13" height="3"/><rect x="3.2" y="14" width="13" height="3"/></svg>
+      </button>
+      <span class="tool-sep"></span>
+      <button class="tool" id="tbDuplicate" type="button" title="Duplicate (⌘D)" aria-label="Duplicate">
+        <svg viewBox="0 0 20 20"><rect x="2.5" y="2.5" width="11" height="11" rx="1.5"/><path d="M6.5 17.5h9a2 2 0 0 0 2-2v-9"/></svg>
+      </button>
+      <button class="tool" id="tbDelete" type="button" title="Delete (Backspace)" aria-label="Delete">
+        <svg viewBox="0 0 20 20"><path d="M3 5.5h14"/><path d="M5.5 5.5 6.5 17h7l1-11.5"/><path d="M7.5 5.5V3h5v2.5"/></svg>
+      </button>
+    </div>
   </div>
 
   <div id="dropzone">
     <h2>Drop a PDF or .txt file here</h2>
-    <p>Nothing you mark ever leaves your browser. Drag out a block over the words you want gone — it stays selected, so you can drag its edges to resize or nudge it with the arrow keys. Click any existing block to select it again. Backspace deletes it. Export bakes everything in permanently.</p>
+    <p>Nothing you mark ever leaves your browser. Drag out a block over the words you want gone — it stays selected, so you can drag its edges to resize or nudge it with the arrow keys. Shift-click or Alt-drag to select several at once. Backspace deletes. Export bakes everything in permanently.</p>
     <button class="btn" id="dropBtn" type="button">Choose a file…</button>
     <button class="btn" id="resumeBtn" type="button" style="display:none; margin-top:10px;">Resume last session</button>
   </div>
@@ -573,7 +642,6 @@ const dropzone = document.getElementById('dropzone');
 const mainEl = document.getElementById('main');
 const pagesContainer = document.getElementById('pages');
 const statusEl = document.getElementById('status');
-const undoBtn = document.getElementById('undoBtn');
 const clearAllBtn = document.getElementById('clearAllBtn');
 const exportBtn = document.getElementById('exportBtn');
 const titleInput = document.getElementById('titleInput');
@@ -591,7 +659,6 @@ const depthBtnLabel = document.getElementById('depthBtnLabel');
 const saveProgressBtn = document.getElementById('saveProgressBtn');
 const loadProgressBtn = document.getElementById('loadProgressBtn');
 const progressInput = document.getElementById('progressInput');
-const arrangeHint = document.getElementById('arrangeHint');
 const resumeBtn = document.getElementById('resumeBtn');
 const skewSlider = document.getElementById('skewSlider');
 const skewValue = document.getElementById('skewValue');
@@ -600,7 +667,10 @@ const skewAllBtn = document.getElementById('skewAllBtn');
 const skewHint = document.getElementById('skewHint');
 const gridToggle = document.getElementById('gridToggle');
 const progressNote = document.getElementById('progressNote');
+const toolbarWrap = document.getElementById('toolbarWrap');
 const toolbar = document.getElementById('toolbar');
+const selectionBar = document.getElementById('selectionBar');
+const selCountLabel = document.getElementById('selCountLabel');
 const tbZoomIn = document.getElementById('tbZoomIn');
 const tbZoomOut = document.getElementById('tbZoomOut');
 const tbZoomLabel = document.getElementById('tbZoomLabel');
@@ -609,6 +679,10 @@ const tbCrop = document.getElementById('tbCrop');
 const tbStraighten = document.getElementById('tbStraighten');
 const tbUndo = document.getElementById('tbUndo');
 const tbRedo = document.getElementById('tbRedo');
+const tbDuplicate = document.getElementById('tbDuplicate');
+const tbDelete = document.getElementById('tbDelete');
+const cropPop = document.getElementById('cropPop');
+const skewPop = document.getElementById('skewPop');
 
 /* ---------- collapsible sidebar sections ---------- */
 
@@ -658,16 +732,7 @@ function setupSections() {
       try { localStorage.setItem(SECTION_KEY, open ? key : ''); } catch (e) {}
     });
   });
-
-  openSection = key => {
-    const target = sections.find(s => s.key === key);
-    if (!target) return;
-    sections.forEach(s => s.setOpen(s === target));
-    try { localStorage.setItem(SECTION_KEY, key); } catch (e) {}
-    target.section.scrollIntoView({ block: 'nearest' });
-  };
 }
-let openSection = () => {};
 setupSections();
 const cropBtn = document.getElementById('cropBtn');
 const cropActions = document.getElementById('cropActions');
@@ -914,24 +979,65 @@ function setPeeking(on) {
   tbPeek.classList.toggle('active', on);
   pagesData.forEach(pd => redraw(pd));
 }
-tbPeek.addEventListener('pointerdown', e => { e.preventDefault(); setPeeking(true); });
-tbPeek.addEventListener('pointerup', () => setPeeking(false));
-tbPeek.addEventListener('pointerleave', () => setPeeking(false));
-tbPeek.addEventListener('pointercancel', () => setPeeking(false));
 
-undoBtn.addEventListener('click', undo);
+// A quick click toggles peek; holding the button reveals only while held.
+const PEEK_HOLD_MS = 250;
+let peekPressedAt = 0;
+let peekWasOn = false;
+tbPeek.addEventListener('pointerdown', e => {
+  e.preventDefault();
+  peekWasOn = peeking;
+  peekPressedAt = Date.now();
+  setPeeking(true);
+});
+function endPeekPress() {
+  if (!peekPressedAt) return;
+  const quick = Date.now() - peekPressedAt < PEEK_HOLD_MS;
+  peekPressedAt = 0;
+  setPeeking(quick ? !peekWasOn : false);
+}
+tbPeek.addEventListener('pointerup', endPeekPress);
+tbPeek.addEventListener('pointerleave', endPeekPress);
+tbPeek.addEventListener('pointercancel', endPeekPress);
+
+/* ---------- toolbar popovers ---------- */
+
+const popovers = [];
+
+function closePopovers(except) {
+  popovers.forEach(p => {
+    if (p.pop === except) return;
+    p.pop.classList.remove('open');
+    p.btn.classList.remove('open');
+  });
+}
+
+function registerPopover(btn, pop) {
+  popovers.push({ btn, pop });
+  btn.addEventListener('click', e => {
+    e.stopPropagation();
+    const isOpen = pop.classList.contains('open');
+    closePopovers();
+    if (isOpen) return;
+    pop.classList.add('open');
+    btn.classList.add('open');
+    const max = toolbar.clientWidth - pop.offsetWidth - 6;
+    pop.style.left = Math.max(6, Math.min(btn.offsetLeft, max)) + 'px';
+  });
+}
+
+registerPopover(tbCrop, cropPop);
+registerPopover(tbStraighten, skewPop);
+document.addEventListener('pointerdown', e => {
+  if (!e.target.closest('.popover') && !e.target.closest('.tool.has-menu')) closePopovers();
+});
+
+tbDuplicate.addEventListener('click', duplicateSelected);
+tbDelete.addEventListener('click', deleteSelected);
 tbUndo.addEventListener('click', undo);
 tbRedo.addEventListener('click', redo);
 tbZoomOut.addEventListener('click', () => setZoom(zoom - ZOOM_STEP));
 tbZoomIn.addEventListener('click', () => setZoom(zoom + ZOOM_STEP));
-tbCrop.addEventListener('click', () => {
-  openSection('crop');
-  cropMode ? exitCropMode(false) : enterCropMode();
-});
-tbStraighten.addEventListener('click', () => {
-  openSection('straighten');
-  skewSlider.focus();
-});
 applyAllBtn.addEventListener('click', applyColorToAll);
 applySizeAllBtn.addEventListener('click', applySizeToAll);
 tbZoomLabel.addEventListener('click', () => setZoom(1));
@@ -971,7 +1077,7 @@ progressInput.addEventListener('change', async e => {
 
 // Clicking the empty desk (not a page or the toolbar) deselects.
 mainEl.addEventListener('pointerdown', e => {
-  if (!e.target.closest('.page') && !e.target.closest('#toolbar')) deselect();
+  if (!e.target.closest('.page') && !e.target.closest('#toolbarWrap')) deselect();
 });
 
 window.addEventListener('keydown', e => {
@@ -1008,18 +1114,7 @@ window.addEventListener('keydown', e => {
 
   if (e.key === 'Delete' || e.key === 'Backspace') {
     e.preventDefault();
-    const removed = [];
-    marks.forEach(mark => {
-      const idx = pd.marks.indexOf(mark);
-      if (idx !== -1) removed.push({ mark, index: idx });
-    });
-    if (removed.length) {
-      removed.sort((a, b) => b.index - a.index).forEach(r => pd.marks.splice(r.index, 1));
-      pushUndo({ type: 'removeMany', pageIndex: pagesData.indexOf(pd), removed });
-      selected = null;
-      redraw(pd);
-      refreshButtons();
-    }
+    deleteSelected();
     return;
   }
 
@@ -1473,7 +1568,7 @@ function updateCropUI() {
   const pd = currentPage();
   cropBtn.disabled = !pd;
   cropBtn.textContent = cropMode ? 'Cancel crop' : 'Crop pages…';
-  cropBtn.classList.toggle('active', cropMode);
+  cropBtn.classList.toggle('primary', cropMode);
   tbCrop.classList.toggle('active', cropMode);
   cropActions.style.display = cropMode ? '' : 'none';
   cropResetBtn.disabled = !pd || (!cropMode && isFullCrop(pd));
@@ -1802,6 +1897,22 @@ function duplicateSelected() {
   });
   pushUndo({ type: 'addMany', pageIndex: pagesData.indexOf(pd), marks: clones });
   setSelection(pd, clones);
+}
+
+function deleteSelected() {
+  if (!selected) return;
+  const pd = selected.pd;
+  const removed = [];
+  selected.marks.forEach(mark => {
+    const idx = pd.marks.indexOf(mark);
+    if (idx !== -1) removed.push({ mark, index: idx });
+  });
+  if (!removed.length) return;
+  removed.sort((a, b) => b.index - a.index).forEach(r => pd.marks.splice(r.index, 1));
+  pushUndo({ type: 'removeMany', pageIndex: pagesData.indexOf(pd), removed });
+  selected = null;
+  redraw(pd);
+  refreshButtons();
 }
 
 /* ---------- pointer interaction ---------- */
@@ -2200,23 +2311,22 @@ function redo() {
 }
 
 function refreshButtons() {
-  undoBtn.disabled = undoStack.length === 0;
+  const ready = pagesData.length > 0;
+  toolbarWrap.style.display = ready ? 'flex' : 'none';
   tbUndo.disabled = undoStack.length === 0;
   tbRedo.disabled = redoStack.length === 0;
-  const ready = pagesData.length > 0;
-  toolbar.style.display = ready ? 'flex' : 'none';
-  tbZoomIn.disabled = !ready;
-  tbZoomLabel.disabled = !ready;
-  tbZoomOut.disabled = !ready;
-  tbPeek.disabled = !ready;
-  tbCrop.disabled = !ready;
-  tbStraighten.disabled = !ready;
+  [tbZoomIn, tbZoomOut, tbZoomLabel, tbPeek, tbCrop, tbStraighten, depthBtn, applyAllBtn]
+    .forEach(b => { b.disabled = !ready; });
+  applySizeAllBtn.disabled = !ready;
   clearAllBtn.disabled = pagesData.every(pd => pd.marks.length === 0);
-  const multi = selCount() >= 2;
-  document.querySelectorAll('[data-arrange]').forEach(b => { b.disabled = !multi; });
-  arrangeHint.textContent = multi
-    ? `${selCount()} blocks selected.`
-    : 'Shift-click blocks to select several, or Alt-drag a box around them.';
+
+  const n = selCount();
+  selectionBar.style.display = n ? 'flex' : 'none';
+  selCountLabel.textContent = n === 1 ? '1 block selected' : `${n} blocks selected`;
+  document.querySelectorAll('[data-arrange]').forEach(b => { b.disabled = n < 2; });
+  tbDuplicate.disabled = !n;
+  tbDelete.disabled = !n;
+
   updateSkewUI();
   updateCropUI();
   persistSession();
