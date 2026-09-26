@@ -149,26 +149,20 @@
   .btn-row { display: flex; gap: 8px; }
   .btn-row .btn { flex: 1; font-size: 0.85rem; padding: 9px 6px; }
 
-  .swatch-row { display: flex; gap: 16px; }
-  .swatch-item { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-  .swatch-label {
-    font-family: "Special Elite", monospace;
-    font-size: 0.62rem;
-    color: var(--sidebar-muted);
-    letter-spacing: 0.03em;
-  }
   .swatch {
-    width: 32px; height: 32px;
+    width: 24px; height: 24px;
     border-radius: 6px;
-    border: 1px solid var(--sidebar-border);
+    border: 1px solid rgba(43,48,56,0.3);
     cursor: pointer;
     padding: 0;
+    flex: 0 0 auto;
   }
   .swatch.active { box-shadow: 0 0 0 2px var(--select); }
   #customColor {
-    width: 32px; height: 32px;
-    border: 1px solid var(--sidebar-border); background: none; padding: 0; cursor: pointer;
+    width: 24px; height: 24px;
+    border: 1px solid rgba(43,48,56,0.3); background: none; padding: 0; cursor: pointer;
     border-radius: 6px; overflow: hidden;
+    flex: 0 0 auto;
   }
   #customColor.active { box-shadow: 0 0 0 2px var(--select); }
   #customColor::-webkit-color-swatch-wrapper { padding: 0; border-radius: 5px; }
@@ -179,31 +173,6 @@
   .check-row input { accent-color: var(--accent); width: 16px; height: 16px; }
 
   .hint { font-size: 0.76rem; color: var(--sidebar-muted); line-height: 1.45; margin: 8px 0 0; }
-
-  .arrange-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-  .arrange-btn {
-    display: flex; align-items: center; justify-content: center;
-    height: 34px;
-    background: linear-gradient(var(--sidebar-raised-hi), var(--sidebar-raised));
-    border: 1px solid var(--sidebar-border);
-    border-radius: 6px;
-    color: var(--sidebar-text);
-    cursor: pointer;
-    padding: 0;
-    box-shadow: 0 1px 0 rgba(255,255,255,0.08) inset, 0 1px 2px rgba(0,0,0,0.22);
-  }
-  .arrange-btn:hover:not(:disabled) { background: linear-gradient(#5b6371, var(--sidebar-raised-hi)); border-color: #6d7583; }
-  .arrange-btn:active:not(:disabled) { box-shadow: 0 1px 3px rgba(0,0,0,0.3) inset; transform: translateY(1px); }
-  .arrange-btn:disabled { opacity: 0.32; cursor: not-allowed; box-shadow: none; }
-  .arrange-btn svg { width: 20px; height: 20px; }
-  .arrange-btn rect { fill: currentColor; }
-  .arrange-btn line { stroke: var(--accent-hi); stroke-width: 1.2; }
-  .arrange-wide {
-    grid-column: 1 / -1;
-    font-family: "Special Elite", monospace;
-    font-size: 0.68rem;
-    letter-spacing: 0.03em;
-  }
 
   .depth-picker { position: relative; }
   .depth-btn { display: flex; align-items: center; gap: 10px; }
@@ -288,36 +257,57 @@
   #status { font-size: 0.78rem; color: var(--sidebar-muted); line-height: 1.4; min-height: 1.2em; }
   .file-note { font-size: 0.74rem; color: var(--sidebar-muted); margin: 8px 0 0; word-break: break-all; }
 
-  .zoom-row { display: flex; align-items: center; gap: 8px; }
-  .zoom-btn {
-    width: 34px; height: 34px;
-    border-radius: 6px;
-    border: 1px solid var(--sidebar-border);
-    background: linear-gradient(var(--sidebar-raised-hi), var(--sidebar-raised));
-    color: var(--sidebar-text);
-    font-size: 1.15rem;
-    line-height: 1;
-    cursor: pointer;
-    box-shadow: 0 1px 0 rgba(255,255,255,0.08) inset, 0 1px 2px rgba(0,0,0,0.22);
-  }
-  .zoom-btn:hover:not(:disabled) { background: linear-gradient(#5b6371, var(--sidebar-raised-hi)); border-color: #6d7583; }
-  .zoom-btn:active:not(:disabled) { box-shadow: 0 1px 3px rgba(0,0,0,0.3) inset; transform: translateY(1px); }
-  .zoom-btn:disabled { opacity: 0.35; cursor: not-allowed; box-shadow: none; }
-  .zoom-label {
-    flex: 1;
-    text-align: center;
-    background: rgba(0,0,0,0.2);
-    border: 1px solid var(--sidebar-border);
-    border-radius: 6px;
-    color: var(--sidebar-text);
-    font-size: 0.85rem;
-    padding: 9px 0;
-    cursor: pointer;
-  }
-  .zoom-label:hover:not(:disabled) { border-color: #6d7583; }
-  .zoom-label:disabled { opacity: 0.35; cursor: not-allowed; }
-
   /* ---------- Main viewer ---------- */
+  #toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    display: none;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 100%;
+    gap: 4px;
+    padding: 6px;
+    border-radius: 9px;
+    background: rgba(255,255,255,0.92);
+    border: 1px solid rgba(43,48,56,0.16);
+    box-shadow: 0 3px 10px var(--shadow);
+    backdrop-filter: blur(6px);
+  }
+  .tool {
+    width: 34px; height: 34px;
+    display: flex; align-items: center; justify-content: center;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    color: var(--ink-soft);
+    cursor: pointer;
+    padding: 0;
+  }
+  .tool svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .tool-arrange svg { width: 18px; height: 18px; }
+  .tool-arrange svg rect { fill: currentColor; stroke: none; }
+  .tool-arrange svg line { stroke: var(--accent); stroke-width: 1.2; }
+  .tool:hover:not(:disabled) { background: rgba(43,48,56,0.08); color: var(--ink); }
+  .tool:active:not(:disabled) { background: rgba(43,48,56,0.16); }
+  .tool.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .tool:disabled { opacity: 0.3; cursor: not-allowed; }
+  .tool-sep { width: 1px; height: 20px; background: rgba(43,48,56,0.18); margin: 0 4px; }
+  .zoom-readout {
+    min-width: 48px;
+    height: 34px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    color: var(--ink-soft);
+    font-family: "Source Serif 4", serif;
+    font-size: 0.82rem;
+    cursor: pointer;
+  }
+  .zoom-readout:hover:not(:disabled) { background: rgba(43,48,56,0.08); color: var(--ink); }
+  .zoom-readout:disabled { opacity: 0.3; cursor: not-allowed; }
+
   #main {
     flex: 1;
     overflow-y: auto;
@@ -413,32 +403,9 @@
   </div>
 
   <div class="section">
-    <p class="section-label">zoom</p>
-    <div class="zoom-row">
-      <button id="zoomOutBtn" class="zoom-btn" type="button" disabled aria-label="Zoom out">−</button>
-      <button id="zoomLabel" class="zoom-label" type="button" disabled title="Reset to 100%">100%</button>
-      <button id="zoomInBtn" class="zoom-btn" type="button" disabled aria-label="Zoom in">+</button>
-    </div>
-  </div>
-
-  <div class="section">
     <p class="section-label">mark color</p>
-    <div class="swatch-row">
-      <div class="swatch-item">
-        <button class="swatch active" data-color="#14100d" style="background:#14100d" type="button" aria-label="Black"></button>
-        <span class="swatch-label">Black</span>
-      </div>
-      <div class="swatch-item">
-        <button class="swatch" data-color="#f7f3e8" style="background:#f7f3e8" type="button" aria-label="White"></button>
-        <span class="swatch-label">White</span>
-      </div>
-      <div class="swatch-item">
-        <input id="customColor" type="color" value="#14100d" aria-label="Custom color">
-        <span class="swatch-label">Custom</span>
-      </div>
-    </div>
-    <div style="height:10px;"></div>
-    <button id="applyAllBtn" class="btn" type="button" disabled>Apply to all blocks</button>
+    <button id="applyAllBtn" class="btn" type="button" disabled>Apply color to all blocks</button>
+    <p class="hint">Pick the color in the toolbar above the document.</p>
   </div>
 
   <div class="section">
@@ -495,41 +462,8 @@
 
   <div class="section">
     <p class="section-label">arrange</p>
-    <div class="arrange-grid">
-      <button class="arrange-btn" type="button" data-arrange="alignLeft" disabled title="Align left">
-        <svg viewBox="0 0 20 20"><line x1="3" y1="2" x2="3" y2="18"/><rect x="3.8" y="4" width="12" height="3.4"/><rect x="3.8" y="12.6" width="8" height="3.4"/></svg>
-      </button>
-      <button class="arrange-btn" type="button" data-arrange="alignCenterH" disabled title="Align centers horizontally">
-        <svg viewBox="0 0 20 20"><line x1="10" y1="2" x2="10" y2="18"/><rect x="4" y="4" width="12" height="3.4"/><rect x="6" y="12.6" width="8" height="3.4"/></svg>
-      </button>
-      <button class="arrange-btn" type="button" data-arrange="alignRight" disabled title="Align right">
-        <svg viewBox="0 0 20 20"><line x1="17" y1="2" x2="17" y2="18"/><rect x="4.2" y="4" width="12" height="3.4"/><rect x="8.2" y="12.6" width="8" height="3.4"/></svg>
-      </button>
-      <button class="arrange-btn" type="button" data-arrange="alignTop" disabled title="Align top">
-        <svg viewBox="0 0 20 20"><line x1="2" y1="3" x2="18" y2="3"/><rect x="4" y="3.8" width="3.4" height="12"/><rect x="12.6" y="3.8" width="3.4" height="8"/></svg>
-      </button>
-      <button class="arrange-btn" type="button" data-arrange="alignMiddleV" disabled title="Align middles vertically">
-        <svg viewBox="0 0 20 20"><line x1="2" y1="10" x2="18" y2="10"/><rect x="4" y="4" width="3.4" height="12"/><rect x="12.6" y="6" width="3.4" height="8"/></svg>
-      </button>
-      <button class="arrange-btn" type="button" data-arrange="alignBottom" disabled title="Align bottom">
-        <svg viewBox="0 0 20 20"><line x1="2" y1="17" x2="18" y2="17"/><rect x="4" y="4.2" width="3.4" height="12"/><rect x="12.6" y="8.2" width="3.4" height="8"/></svg>
-      </button>
-      <button class="arrange-btn" type="button" data-arrange="distributeV" disabled title="Space evenly, top to bottom">
-        <svg viewBox="0 0 20 20"><rect x="3" y="2.5" width="14" height="3"/><rect x="3" y="8.5" width="14" height="3"/><rect x="3" y="14.5" width="14" height="3"/></svg>
-      </button>
-      <button class="arrange-btn" type="button" data-arrange="distributeH" disabled title="Space evenly, left to right">
-        <svg viewBox="0 0 20 20"><rect x="2.5" y="3" width="3" height="14"/><rect x="8.5" y="3" width="3" height="14"/><rect x="14.5" y="3" width="3" height="14"/></svg>
-      </button>
-      <button class="arrange-btn" type="button" data-arrange="matchWidth" disabled title="Match the widest block">
-        <svg viewBox="0 0 20 20"><line x1="2.5" y1="2" x2="2.5" y2="18"/><line x1="17.5" y1="2" x2="17.5" y2="18"/><rect x="3" y="4" width="14" height="3.4"/><rect x="3" y="12.6" width="14" height="3.4"/></svg>
-      </button>
-      <button class="arrange-btn arrange-wide" type="button" data-arrange="stackLines" disabled title="Align left, match width, and space evenly">Stack as lines</button>
-    </div>
+    <button class="btn" type="button" data-arrange="stackLines" disabled title="Align left, match width, and space evenly">Stack as lines</button>
     <p class="hint" id="arrangeHint">Shift-click blocks to select several, or Alt-drag a box around them.</p>
-  </div>
-
-  <div class="section">
-    <button id="peekBtn" class="btn" type="button">Hold to peek</button>
   </div>
 
   <div class="section btn-row">
@@ -557,6 +491,68 @@
 </aside>
 
 <main id="main">
+  <div id="toolbar" aria-label="Document tools">
+    <button class="tool" id="tbZoomOut" type="button" disabled title="Zoom out" aria-label="Zoom out">
+      <svg viewBox="0 0 20 20"><circle cx="8.5" cy="8.5" r="5.5"/><line x1="12.6" y1="12.6" x2="17.5" y2="17.5"/><line x1="6" y1="8.5" x2="11" y2="8.5"/></svg>
+    </button>
+    <button class="zoom-readout" id="tbZoomLabel" type="button" disabled title="Reset to 100%">100%</button>
+    <button class="tool" id="tbZoomIn" type="button" disabled title="Zoom in" aria-label="Zoom in">
+      <svg viewBox="0 0 20 20"><circle cx="8.5" cy="8.5" r="5.5"/><line x1="12.6" y1="12.6" x2="17.5" y2="17.5"/><line x1="6" y1="8.5" x2="11" y2="8.5"/><line x1="8.5" y1="6" x2="8.5" y2="11"/></svg>
+    </button>
+    <span class="tool-sep"></span>
+    <button class="swatch active" data-color="#14100d" style="background:#14100d" type="button" title="Black marks" aria-label="Black marks"></button>
+    <button class="swatch" data-color="#f7f3e8" style="background:#f7f3e8" type="button" title="White marks" aria-label="White marks"></button>
+    <input id="customColor" type="color" value="#14100d" title="Custom mark color" aria-label="Custom mark color">
+    <span class="tool-sep"></span>
+    <button class="tool" id="tbPeek" type="button" title="Hold to peek under the blocks" aria-label="Hold to peek">
+      <svg viewBox="0 0 20 20"><path d="M1.5 10S5 4.5 10 4.5 18.5 10 18.5 10 15 15.5 10 15.5 1.5 10 1.5 10Z"/><circle cx="10" cy="10" r="2.5"/></svg>
+    </button>
+    <button class="tool" id="tbCrop" type="button" title="Crop pages" aria-label="Crop pages">
+      <svg viewBox="0 0 20 20"><path d="M6 1.5v12.5h12.5"/><path d="M1.5 6H14v12.5"/></svg>
+    </button>
+    <button class="tool" id="tbStraighten" type="button" title="Straighten pages" aria-label="Straighten pages">
+      <svg viewBox="0 0 20 20"><line x1="2" y1="16.5" x2="18" y2="16.5"/><line x1="2.5" y1="11.5" x2="17.5" y2="4.5"/><line x1="2.5" y1="9.5" x2="2.5" y2="13.5"/><line x1="17.5" y1="2.5" x2="17.5" y2="6.5"/></svg>
+    </button>
+    <span class="tool-sep"></span>
+    <button class="tool" id="tbUndo" type="button" disabled title="Undo" aria-label="Undo">
+      <svg viewBox="0 0 20 20"><path d="M6.5 4.5 2.5 8.5l4 4"/><path d="M2.5 8.5h8.5a4.5 4.5 0 0 1 0 9H7"/></svg>
+    </button>
+    <button class="tool" id="tbRedo" type="button" disabled title="Redo" aria-label="Redo">
+      <svg viewBox="0 0 20 20"><path d="M13.5 4.5l4 4-4 4"/><path d="M17.5 8.5H9a4.5 4.5 0 0 0 0 9h4"/></svg>
+    </button>
+    <span class="tool-sep"></span>
+    <button class="tool tool-arrange" type="button" data-arrange="alignLeft" disabled title="Align left" aria-label="Align left">
+      <svg viewBox="0 0 20 20"><line x1="3" y1="2" x2="3" y2="18"/><rect x="3.8" y="4" width="12" height="3.4"/><rect x="3.8" y="12.6" width="8" height="3.4"/></svg>
+    </button>
+    <button class="tool tool-arrange" type="button" data-arrange="alignCenterH" disabled title="Align centers horizontally" aria-label="Align centers horizontally">
+      <svg viewBox="0 0 20 20"><line x1="10" y1="2" x2="10" y2="18"/><rect x="4" y="4" width="12" height="3.4"/><rect x="6" y="12.6" width="8" height="3.4"/></svg>
+    </button>
+    <button class="tool tool-arrange" type="button" data-arrange="alignRight" disabled title="Align right" aria-label="Align right">
+      <svg viewBox="0 0 20 20"><line x1="17" y1="2" x2="17" y2="18"/><rect x="4.2" y="4" width="12" height="3.4"/><rect x="8.2" y="12.6" width="8" height="3.4"/></svg>
+    </button>
+    <button class="tool tool-arrange" type="button" data-arrange="alignTop" disabled title="Align top" aria-label="Align top">
+      <svg viewBox="0 0 20 20"><line x1="2" y1="3" x2="18" y2="3"/><rect x="4" y="3.8" width="3.4" height="12"/><rect x="12.6" y="3.8" width="3.4" height="8"/></svg>
+    </button>
+    <button class="tool tool-arrange" type="button" data-arrange="alignMiddleV" disabled title="Align middles vertically" aria-label="Align middles vertically">
+      <svg viewBox="0 0 20 20"><line x1="2" y1="10" x2="18" y2="10"/><rect x="4" y="4" width="3.4" height="12"/><rect x="12.6" y="6" width="3.4" height="8"/></svg>
+    </button>
+    <button class="tool tool-arrange" type="button" data-arrange="alignBottom" disabled title="Align bottom" aria-label="Align bottom">
+      <svg viewBox="0 0 20 20"><line x1="2" y1="17" x2="18" y2="17"/><rect x="4" y="4.2" width="3.4" height="12"/><rect x="12.6" y="8.2" width="3.4" height="8"/></svg>
+    </button>
+    <button class="tool tool-arrange" type="button" data-arrange="distributeV" disabled title="Space evenly, top to bottom" aria-label="Space evenly, top to bottom">
+      <svg viewBox="0 0 20 20"><rect x="3" y="2.5" width="14" height="3"/><rect x="3" y="8.5" width="14" height="3"/><rect x="3" y="14.5" width="14" height="3"/></svg>
+    </button>
+    <button class="tool tool-arrange" type="button" data-arrange="distributeH" disabled title="Space evenly, left to right" aria-label="Space evenly, left to right">
+      <svg viewBox="0 0 20 20"><rect x="2.5" y="3" width="3" height="14"/><rect x="8.5" y="3" width="3" height="14"/><rect x="14.5" y="3" width="3" height="14"/></svg>
+    </button>
+    <button class="tool tool-arrange" type="button" data-arrange="matchWidth" disabled title="Match the widest block" aria-label="Match the widest block">
+      <svg viewBox="0 0 20 20"><line x1="2.5" y1="2" x2="2.5" y2="18"/><line x1="17.5" y1="2" x2="17.5" y2="18"/><rect x="3" y="4" width="14" height="3.4"/><rect x="3" y="12.6" width="14" height="3.4"/></svg>
+    </button>
+    <button class="tool tool-arrange" type="button" data-arrange="stackLines" disabled title="Stack as lines: align left, match width, space evenly" aria-label="Stack as lines">
+      <svg viewBox="0 0 20 20"><line x1="2.5" y1="2" x2="2.5" y2="18"/><rect x="3.2" y="3" width="13" height="3"/><rect x="3.2" y="8.5" width="13" height="3"/><rect x="3.2" y="14" width="13" height="3"/></svg>
+    </button>
+  </div>
+
   <div id="dropzone">
     <h2>Drop a PDF or .txt file here</h2>
     <p>Nothing you mark ever leaves your browser. Drag out a block over the words you want gone — it stays selected, so you can drag its edges to resize or nudge it with the arrow keys. Click any existing block to select it again. Backspace deletes it. Export bakes everything in permanently.</p>
@@ -580,14 +576,10 @@ const statusEl = document.getElementById('status');
 const undoBtn = document.getElementById('undoBtn');
 const clearAllBtn = document.getElementById('clearAllBtn');
 const exportBtn = document.getElementById('exportBtn');
-const peekBtn = document.getElementById('peekBtn');
 const titleInput = document.getElementById('titleInput');
 const customColor = document.getElementById('customColor');
 const applyAllBtn = document.getElementById('applyAllBtn');
 const applySizeAllBtn = document.getElementById('applySizeAllBtn');
-const zoomOutBtn = document.getElementById('zoomOutBtn');
-const zoomInBtn = document.getElementById('zoomInBtn');
-const zoomLabel = document.getElementById('zoomLabel');
 const depthPicker = document.getElementById('depthPicker');
 const depthBtn = document.getElementById('depthBtn');
 const depthPanel = document.getElementById('depthPanel');
@@ -608,6 +600,15 @@ const skewAllBtn = document.getElementById('skewAllBtn');
 const skewHint = document.getElementById('skewHint');
 const gridToggle = document.getElementById('gridToggle');
 const progressNote = document.getElementById('progressNote');
+const toolbar = document.getElementById('toolbar');
+const tbZoomIn = document.getElementById('tbZoomIn');
+const tbZoomOut = document.getElementById('tbZoomOut');
+const tbZoomLabel = document.getElementById('tbZoomLabel');
+const tbPeek = document.getElementById('tbPeek');
+const tbCrop = document.getElementById('tbCrop');
+const tbStraighten = document.getElementById('tbStraighten');
+const tbUndo = document.getElementById('tbUndo');
+const tbRedo = document.getElementById('tbRedo');
 
 /* ---------- collapsible sidebar sections ---------- */
 
@@ -641,6 +642,7 @@ function setupSections() {
 
     const entry = {
       key,
+      section,
       setOpen(open) {
         section.classList.toggle('open', open);
         head.setAttribute('aria-expanded', String(open));
@@ -656,7 +658,16 @@ function setupSections() {
       try { localStorage.setItem(SECTION_KEY, open ? key : ''); } catch (e) {}
     });
   });
+
+  openSection = key => {
+    const target = sections.find(s => s.key === key);
+    if (!target) return;
+    sections.forEach(s => s.setOpen(s === target));
+    try { localStorage.setItem(SECTION_KEY, key); } catch (e) {}
+    target.section.scrollIntoView({ block: 'nearest' });
+  };
 }
+let openSection = () => {};
 setupSections();
 const cropBtn = document.getElementById('cropBtn');
 const cropActions = document.getElementById('cropActions');
@@ -666,6 +677,7 @@ const cropHint = document.getElementById('cropHint');
 
 let pagesData = [];        // {pageNum, canvas, overlay, octx, marks:[], renderScale, viewportPt}
 let undoStack = [];        // {type:'add'|'remove'|'move'|'resize', pageIndex, mark, ...}
+let redoStack = [];
 let currentColor = '#14100d';
 let peeking = false;
 let lockHeight = true;  // every redaction block keeps a consistent depth, by design
@@ -807,7 +819,7 @@ function choosePreset(pt) {
       if (m.y !== before.y || m.h !== before.h) changes.push({ mark: m, before });
     });
     if (changes.length) {
-      undoStack.push({ type: 'batch', pageIndex: pagesData.indexOf(selected.pd), changes });
+      pushUndo({ type: 'batch', pageIndex: pagesData.indexOf(selected.pd), changes });
       refreshButtons();
     }
     redraw(selected.pd);
@@ -899,24 +911,34 @@ function applyColorToSelection() {
 function setPeeking(on) {
   if (peeking === on) return;
   peeking = on;
-  peekBtn.classList.toggle('active', on);
+  tbPeek.classList.toggle('active', on);
   pagesData.forEach(pd => redraw(pd));
 }
-peekBtn.addEventListener('pointerdown', e => { e.preventDefault(); setPeeking(true); });
-peekBtn.addEventListener('pointerup', () => setPeeking(false));
-peekBtn.addEventListener('pointerleave', () => setPeeking(false));
-peekBtn.addEventListener('pointercancel', () => setPeeking(false));
+tbPeek.addEventListener('pointerdown', e => { e.preventDefault(); setPeeking(true); });
+tbPeek.addEventListener('pointerup', () => setPeeking(false));
+tbPeek.addEventListener('pointerleave', () => setPeeking(false));
+tbPeek.addEventListener('pointercancel', () => setPeeking(false));
 
 undoBtn.addEventListener('click', undo);
+tbUndo.addEventListener('click', undo);
+tbRedo.addEventListener('click', redo);
+tbZoomOut.addEventListener('click', () => setZoom(zoom - ZOOM_STEP));
+tbZoomIn.addEventListener('click', () => setZoom(zoom + ZOOM_STEP));
+tbCrop.addEventListener('click', () => {
+  openSection('crop');
+  cropMode ? exitCropMode(false) : enterCropMode();
+});
+tbStraighten.addEventListener('click', () => {
+  openSection('straighten');
+  skewSlider.focus();
+});
 applyAllBtn.addEventListener('click', applyColorToAll);
 applySizeAllBtn.addEventListener('click', applySizeToAll);
-zoomOutBtn.addEventListener('click', () => setZoom(zoom - ZOOM_STEP));
-zoomInBtn.addEventListener('click', () => setZoom(zoom + ZOOM_STEP));
-zoomLabel.addEventListener('click', () => setZoom(1));
+tbZoomLabel.addEventListener('click', () => setZoom(1));
 
 function setZoom(z) {
   zoom = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, z));
-  zoomLabel.textContent = Math.round(zoom * 100) + '%';
+  tbZoomLabel.textContent = Math.round(zoom * 100) + '%';
   pagesData.forEach(pd => {
     pd.pageWrap.style.width = (pd.baseWidth * zoom) + 'px';
     pd.pageWrap.style.height = (pd.baseHeight * zoom) + 'px';
@@ -926,6 +948,7 @@ clearAllBtn.addEventListener('click', () => {
   if (!confirm('Clear every mark on every page?')) return;
   pagesData.forEach(pd => pd.marks = []);
   undoStack = [];
+  redoStack = [];
   selected = null;
   pagesData.forEach(pd => redraw(pd));
   refreshButtons();
@@ -946,14 +969,19 @@ progressInput.addEventListener('change', async e => {
   }
 });
 
-// Clicking the empty desk (not a page) deselects.
+// Clicking the empty desk (not a page or the toolbar) deselects.
 mainEl.addEventListener('pointerdown', e => {
-  if (!e.target.closest('.page')) deselect();
+  if (!e.target.closest('.page') && !e.target.closest('#toolbar')) deselect();
 });
 
 window.addEventListener('keydown', e => {
   if (document.activeElement === titleInput || document.activeElement === customColor || document.activeElement === skewSlider) return;
-  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); return; }
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') {
+    e.preventDefault();
+    e.shiftKey ? redo() : undo();
+    return;
+  }
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'y') { e.preventDefault(); redo(); return; }
 
   if (cropMode) {
     if (e.key === 'Escape') exitCropMode(false);
@@ -987,7 +1015,7 @@ window.addEventListener('keydown', e => {
     });
     if (removed.length) {
       removed.sort((a, b) => b.index - a.index).forEach(r => pd.marks.splice(r.index, 1));
-      undoStack.push({ type: 'removeMany', pageIndex: pagesData.indexOf(pd), removed });
+      pushUndo({ type: 'removeMany', pageIndex: pagesData.indexOf(pd), removed });
       selected = null;
       redraw(pd);
       refreshButtons();
@@ -1006,7 +1034,7 @@ window.addEventListener('keydown', e => {
   e.preventDefault();
   const changes = marks.map(m => ({ mark: m, before: snapshot(m) }));
   marks.forEach(m => { m.x += dx; m.y += dy; });
-  undoStack.push({ type: 'batch', pageIndex: pagesData.indexOf(pd), changes });
+  pushUndo({ type: 'batch', pageIndex: pagesData.indexOf(pd), changes });
   redraw(pd);
   refreshButtons();
 });
@@ -1030,6 +1058,7 @@ async function loadFile(file) {
     applyProgress(pendingSession.progress);
   }
   pendingSession = null;
+  refreshButtons();
   updateSkewUI();
   updateCropUI();
   updateGrid();
@@ -1041,6 +1070,7 @@ function resetWorkspace() {
   pagesContainer.innerHTML = '';
   pagesData = [];
   undoStack = [];
+  redoStack = [];
   selected = null;
   cropMode = false;
   lastActivePd = null;
@@ -1052,11 +1082,8 @@ function resetWorkspace() {
   if (!progressFileHandle) progressNote.textContent = '';
   applyAllBtn.disabled = true;
   applySizeAllBtn.disabled = true;
-  zoomOutBtn.disabled = true;
-  zoomInBtn.disabled = true;
-  zoomLabel.disabled = true;
   zoom = 1;
-  zoomLabel.textContent = '100%';
+  tbZoomLabel.textContent = '100%';
 }
 
 function createPageShell(viewportPt, renderScale, pageNum, totalPages) {
@@ -1196,9 +1223,6 @@ async function loadPdf(file) {
     saveProgressBtn.disabled = false;
     applyAllBtn.disabled = false;
     applySizeAllBtn.disabled = false;
-    zoomOutBtn.disabled = false;
-    zoomInBtn.disabled = false;
-    zoomLabel.disabled = false;
   } catch (err) {
     console.error(err);
     statusEl.textContent = "Couldn't read that PDF. Try a different file.";
@@ -1275,9 +1299,6 @@ async function loadTxt(file) {
     saveProgressBtn.disabled = false;
     applyAllBtn.disabled = false;
     applySizeAllBtn.disabled = false;
-    zoomOutBtn.disabled = false;
-    zoomInBtn.disabled = false;
-    zoomLabel.disabled = false;
   } catch (err) {
     console.error(err);
     statusEl.textContent = "Couldn't read that text file.";
@@ -1453,6 +1474,7 @@ function updateCropUI() {
   cropBtn.disabled = !pd;
   cropBtn.textContent = cropMode ? 'Cancel crop' : 'Crop pages…';
   cropBtn.classList.toggle('active', cropMode);
+  tbCrop.classList.toggle('active', cropMode);
   cropActions.style.display = cropMode ? '' : 'none';
   cropResetBtn.disabled = !pd || (!cropMode && isFullCrop(pd));
   if (!pd) { cropHint.textContent = 'Trim the margins off your pages.'; return; }
@@ -1692,7 +1714,7 @@ function arrange(fn) {
     c.mark.x !== c.before.x || c.mark.y !== c.before.y ||
     c.mark.w !== c.before.w || c.mark.h !== c.before.h);
   if (moved) {
-    undoStack.push({ type: 'batch', pageIndex: pagesData.indexOf(pd), changes });
+    pushUndo({ type: 'batch', pageIndex: pagesData.indexOf(pd), changes });
     redraw(pd);
     refreshButtons();
   }
@@ -1741,7 +1763,7 @@ function applyColorToAll() {
     });
   });
   if (changes.length) {
-    undoStack.push({ type: 'colorAll', changes });
+    pushUndo({ type: 'colorAll', changes });
     pagesData.forEach(pd => redraw(pd));
     refreshButtons();
   }
@@ -1763,7 +1785,7 @@ function applySizeToAll() {
     });
   });
   if (changes.length) {
-    undoStack.push({ type: 'resizeAll', changes });
+    pushUndo({ type: 'resizeAll', changes });
     pagesData.forEach(pd => redraw(pd));
     refreshButtons();
   }
@@ -1778,7 +1800,7 @@ function duplicateSelected() {
     pd.marks.push(clone);
     return clone;
   });
-  undoStack.push({ type: 'addMany', pageIndex: pagesData.indexOf(pd), marks: clones });
+  pushUndo({ type: 'addMany', pageIndex: pagesData.indexOf(pd), marks: clones });
   setSelection(pd, clones);
 }
 
@@ -1922,7 +1944,7 @@ function finishStroke(pd) {
     const m = normalizeRect(tempMark);
     if (Math.abs(m.w) > 3 && Math.abs(m.h) > 3) {
       pd.marks.push(m);
-      undoStack.push({ type: 'add', pageIndex: pagesData.indexOf(pd), mark: m });
+      pushUndo({ type: 'add', pageIndex: pagesData.indexOf(pd), mark: m });
       selectMark(pd, m);
       if (!lockHeight) syncLockedHeight(m.h, pd);
       refreshButtons();
@@ -1937,14 +1959,14 @@ function finishStroke(pd) {
       .filter(o => o.mark.x !== o.x || o.mark.y !== o.y)
       .map(o => ({ mark: o.mark, before: { x: o.x, y: o.y, w: o.mark.w, h: o.mark.h } }));
     if (changes.length) {
-      undoStack.push({ type: 'batch', pageIndex: pagesData.indexOf(pd), changes });
+      pushUndo({ type: 'batch', pageIndex: pagesData.indexOf(pd), changes });
       refreshButtons();
     }
   } else if (dragMode === 'resize') {
     const m = selected.marks[0];
     const changed = m.x !== resizeOrig.x || m.y !== resizeOrig.y || m.w !== resizeOrig.w || m.h !== resizeOrig.h;
     if (changed) {
-      undoStack.push({ type: 'resize', pageIndex: pagesData.indexOf(pd), mark: m, before: resizeOrig });
+      pushUndo({ type: 'resize', pageIndex: pagesData.indexOf(pd), mark: m, before: resizeOrig });
       if (!lockHeight && (resizeHandle.includes('n') || resizeHandle.includes('s'))) syncLockedHeight(m.h, pd);
       refreshButtons();
     }
@@ -2066,68 +2088,129 @@ function redraw(pd, preview) {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
 }
 
-/* ---------- undo ---------- */
+/* ---------- undo / redo ---------- */
 
-function undo() {
-  const action = undoStack.pop();
-  if (!action) return;
+function pushUndo(action) {
+  undoStack.push(action);
+  redoStack.length = 0;
+}
 
+// `before` is captured when the action happens; `after` is captured the first time it's undone.
+function captureAfter(action) {
+  if (action.after) return;
   if (action.type === 'colorAll') {
-    action.changes.forEach(c => { c.mark.color = c.before; });
+    action.after = action.changes.map(c => c.mark.color);
+  } else if (action.type === 'resizeAll' || action.type === 'batch') {
+    action.after = action.changes.map(c => snapshot(c.mark));
+  } else if (action.type === 'move' || action.type === 'resize') {
+    action.after = snapshot(action.mark);
+  }
+}
+
+function applyAction(action, redoing) {
+  if (action.type === 'colorAll') {
+    action.changes.forEach((c, i) => { c.mark.color = redoing ? action.after[i] : c.before; });
     pagesData.forEach(pd => redraw(pd));
-    refreshButtons();
     return;
   }
   if (action.type === 'resizeAll') {
-    action.changes.forEach(c => {
-      c.mark.x = c.before.x; c.mark.y = c.before.y; c.mark.w = c.before.w; c.mark.h = c.before.h;
+    action.changes.forEach((c, i) => {
+      const r = redoing ? action.after[i] : c.before;
+      c.mark.x = r.x; c.mark.y = r.y; c.mark.w = r.w; c.mark.h = r.h;
     });
     pagesData.forEach(pd => redraw(pd));
-    refreshButtons();
     return;
   }
 
   const pd = pagesData[action.pageIndex];
-  if (!pd) return refreshButtons();
+  if (!pd) return;
 
   if (action.type === 'add') {
-    const idx = pd.marks.indexOf(action.mark);
-    if (idx !== -1) pd.marks.splice(idx, 1);
-    if (isSelected(action.mark)) selected = null;
+    if (redoing) {
+      pd.marks.splice(Math.min(action.index ?? pd.marks.length, pd.marks.length), 0, action.mark);
+      selected = { pd, marks: [action.mark] };
+    } else {
+      action.index = pd.marks.indexOf(action.mark);
+      if (action.index !== -1) pd.marks.splice(action.index, 1);
+      if (isSelected(action.mark)) selected = null;
+    }
   } else if (action.type === 'addMany') {
-    action.marks.forEach(m => {
-      const idx = pd.marks.indexOf(m);
-      if (idx !== -1) pd.marks.splice(idx, 1);
-    });
-    selected = null;
+    if (redoing) {
+      action.marks.forEach(m => pd.marks.push(m));
+      selected = { pd, marks: action.marks.slice() };
+    } else {
+      action.marks.forEach(m => {
+        const idx = pd.marks.indexOf(m);
+        if (idx !== -1) pd.marks.splice(idx, 1);
+      });
+      selected = null;
+    }
   } else if (action.type === 'remove') {
-    pd.marks.splice(Math.min(action.index, pd.marks.length), 0, action.mark);
-    selected = { pd, marks: [action.mark] };
+    if (redoing) {
+      const idx = pd.marks.indexOf(action.mark);
+      if (idx !== -1) pd.marks.splice(idx, 1);
+      selected = null;
+    } else {
+      pd.marks.splice(Math.min(action.index, pd.marks.length), 0, action.mark);
+      selected = { pd, marks: [action.mark] };
+    }
   } else if (action.type === 'removeMany') {
-    action.removed.slice().sort((a, b) => a.index - b.index)
-      .forEach(r => pd.marks.splice(Math.min(r.index, pd.marks.length), 0, r.mark));
-    selected = { pd, marks: action.removed.map(r => r.mark) };
+    if (redoing) {
+      action.removed.forEach(r => {
+        const idx = pd.marks.indexOf(r.mark);
+        if (idx !== -1) pd.marks.splice(idx, 1);
+      });
+      selected = null;
+    } else {
+      action.removed.slice().sort((a, b) => a.index - b.index)
+        .forEach(r => pd.marks.splice(Math.min(r.index, pd.marks.length), 0, r.mark));
+      selected = { pd, marks: action.removed.map(r => r.mark) };
+    }
   } else if (action.type === 'batch') {
-    action.changes.forEach(c => {
-      c.mark.x = c.before.x; c.mark.y = c.before.y;
-      c.mark.w = c.before.w; c.mark.h = c.before.h;
+    action.changes.forEach((c, i) => {
+      const r = redoing ? action.after[i] : c.before;
+      c.mark.x = r.x; c.mark.y = r.y; c.mark.w = r.w; c.mark.h = r.h;
     });
-  } else if (action.type === 'move') {
-    action.mark.x = action.before.x;
-    action.mark.y = action.before.y;
-  } else if (action.type === 'resize') {
-    action.mark.x = action.before.x;
-    action.mark.y = action.before.y;
-    action.mark.w = action.before.w;
-    action.mark.h = action.before.h;
+  } else if (action.type === 'move' || action.type === 'resize') {
+    const r = redoing ? action.after : action.before;
+    action.mark.x = r.x;
+    action.mark.y = r.y;
+    if (r.w !== undefined) action.mark.w = r.w;
+    if (r.h !== undefined) action.mark.h = r.h;
   }
 
   redraw(pd);
+}
+
+function undo() {
+  const action = undoStack.pop();
+  if (!action) return;
+  captureAfter(action);
+  applyAction(action, false);
+  redoStack.push(action);
+  refreshButtons();
+}
+
+function redo() {
+  const action = redoStack.pop();
+  if (!action) return;
+  applyAction(action, true);
+  undoStack.push(action);
   refreshButtons();
 }
 
 function refreshButtons() {
   undoBtn.disabled = undoStack.length === 0;
+  tbUndo.disabled = undoStack.length === 0;
+  tbRedo.disabled = redoStack.length === 0;
+  const ready = pagesData.length > 0;
+  toolbar.style.display = ready ? 'flex' : 'none';
+  tbZoomIn.disabled = !ready;
+  tbZoomLabel.disabled = !ready;
+  tbZoomOut.disabled = !ready;
+  tbPeek.disabled = !ready;
+  tbCrop.disabled = !ready;
+  tbStraighten.disabled = !ready;
   clearAllBtn.disabled = pagesData.every(pd => pd.marks.length === 0);
   const multi = selCount() >= 2;
   document.querySelectorAll('[data-arrange]').forEach(b => { b.disabled = !multi; });
@@ -2331,6 +2414,7 @@ function applyProgress(data) {
     redraw(pd);
   });
   undoStack = [];
+  redoStack = [];
   selected = null;
   refreshButtons();
   statusEl.textContent = mismatched
