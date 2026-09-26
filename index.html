@@ -11,33 +11,36 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   :root {
-    --paper: #efe7d6;
-    --paper-edge: #ddd0b3;
-    --ink: #201b16;
-    --ink-soft: #4a4038;
-    --sidebar: #201b16;
-    --sidebar-text: #ece4d6;
-    --sidebar-muted: #a89d8c;
-    --accent: #a23e2d;
-    --accent-hi: #c65138;
-    --select: #3d7dc9;
-    --desk: #cabfa9;
-    --line: rgba(32,27,22,0.14);
-    --shadow: rgba(20,15,10,0.35);
+    --paper: #fbfaf7;
+    --paper-edge: #eceae4;
+    --ink: #2b3038;
+    --ink-soft: #5b626d;
+    --sidebar: #373d47;
+    --sidebar-raised: #464d59;
+    --sidebar-raised-hi: #525a68;
+    --sidebar-border: #5c6470;
+    --sidebar-text: #eef0f3;
+    --sidebar-muted: #a7aeb9;
+    --accent: #4a7ab5;
+    --accent-hi: #5a8cc9;
+    --select: #4a90d9;
+    --desk: #dcdee2;
+    --line: rgba(43,48,56,0.14);
+    --shadow: rgba(30,35,45,0.22);
     padding-top: env(safe-area-inset-top, 0px);
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --desk: #14110d;
-      --line: rgba(236,228,214,0.12);
-      --shadow: rgba(0,0,0,0.6);
+      --desk: #22262d;
+      --line: rgba(238,240,243,0.12);
+      --shadow: rgba(0,0,0,0.45);
     }
   }
   :root[data-theme="dark"] {
-    --desk: #14110d;
-    --line: rgba(236,228,214,0.12);
-    --shadow: rgba(0,0,0,0.6);
+    --desk: #22262d;
+    --line: rgba(238,240,243,0.12);
+    --shadow: rgba(0,0,0,0.45);
   }
   * { box-sizing: border-box; }
   html, body { height: 100%; margin: 0; }
@@ -75,7 +78,7 @@
     line-height: 1.45;
     margin: 0;
   }
-  .section { border-top: 1px solid rgba(236,228,214,0.14); padding-top: 16px; }
+  .section { border-top: 1px solid rgba(238,240,243,0.12); padding-top: 16px; }
   .section-label {
     font-family: "Special Elite", monospace;
     font-size: 0.68rem;
@@ -84,29 +87,67 @@
     margin: 0 0 10px;
   }
 
+  .section.collapsible { padding-top: 0; }
+  .section-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    background: none;
+    border: 0;
+    padding: 14px 0 12px;
+    margin: 0;
+    cursor: pointer;
+    color: inherit;
+  }
+  .section-head .section-label { margin: 0; flex: 1; text-align: left; }
+  .section-head:hover .section-label { color: var(--sidebar-text); }
+  .section-caret {
+    color: var(--sidebar-muted);
+    font-size: 0.62rem;
+    transition: transform 0.15s;
+  }
+  .section.open .section-caret { transform: rotate(180deg); }
+  .section-body { display: none; padding-bottom: 14px; }
+  .section.open .section-body { display: block; }
+
   #fileBtn, .btn {
     font-family: "Source Serif 4", serif;
-    font-size: 0.92rem;
-    background: transparent;
+    font-size: 0.9rem;
+    font-weight: 500;
+    background: linear-gradient(var(--sidebar-raised-hi), var(--sidebar-raised));
     color: var(--sidebar-text);
-    border: 1px solid rgba(236,228,214,0.35);
-    border-radius: 3px;
+    border: 1px solid var(--sidebar-border);
+    border-radius: 6px;
     padding: 9px 12px;
     cursor: pointer;
     width: 100%;
-    text-align: left;
-    transition: background 0.15s, border-color 0.15s;
+    text-align: center;
+    box-shadow: 0 1px 0 rgba(255,255,255,0.08) inset, 0 1px 2px rgba(0,0,0,0.22);
+    transition: background 0.12s, border-color 0.12s, box-shadow 0.12s;
   }
-  #fileBtn:hover, .btn:hover { background: rgba(236,228,214,0.08); border-color: rgba(236,228,214,0.6); }
-  .btn.active { background: var(--select); border-color: var(--select); color: #fff; }
-  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  #fileBtn:hover:not(:disabled), .btn:hover:not(:disabled) {
+    background: linear-gradient(#5b6371, var(--sidebar-raised-hi));
+    border-color: #6d7583;
+  }
+  #fileBtn:active:not(:disabled), .btn:active:not(:disabled) {
+    background: var(--sidebar-raised);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3) inset;
+    transform: translateY(1px);
+  }
+  .btn.active {
+    background: linear-gradient(var(--accent-hi), var(--accent));
+    border-color: var(--accent);
+    color: #fff;
+  }
+  .btn:disabled { opacity: 0.38; cursor: not-allowed; box-shadow: none; }
   .btn:focus-visible, #fileBtn:focus-visible, button:focus-visible, input:focus-visible {
     outline: 2px solid var(--select); outline-offset: 2px;
   }
   #fileInput, #progressInput { display: none; }
 
   .btn-row { display: flex; gap: 8px; }
-  .btn-row .btn { flex: 1; }
+  .btn-row .btn { flex: 1; font-size: 0.85rem; padding: 9px 6px; }
 
   .swatch-row { display: flex; gap: 16px; }
   .swatch-item { display: flex; flex-direction: column; align-items: center; gap: 6px; }
@@ -118,18 +159,16 @@
   }
   .swatch {
     width: 32px; height: 32px;
-    border-radius: 5px;
-    border: none;
+    border-radius: 6px;
+    border: 1px solid var(--sidebar-border);
     cursor: pointer;
     padding: 0;
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.14);
   }
   .swatch.active { box-shadow: 0 0 0 2px var(--select); }
   #customColor {
     width: 32px; height: 32px;
-    border: none; background: none; padding: 0; cursor: pointer;
-    border-radius: 5px; overflow: hidden;
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.14);
+    border: 1px solid var(--sidebar-border); background: none; padding: 0; cursor: pointer;
+    border-radius: 6px; overflow: hidden;
   }
   #customColor.active { box-shadow: 0 0 0 2px var(--select); }
   #customColor::-webkit-color-swatch-wrapper { padding: 0; border-radius: 5px; }
@@ -145,15 +184,17 @@
   .arrange-btn {
     display: flex; align-items: center; justify-content: center;
     height: 34px;
-    background: transparent;
-    border: 1px solid rgba(236,228,214,0.3);
-    border-radius: 3px;
+    background: linear-gradient(var(--sidebar-raised-hi), var(--sidebar-raised));
+    border: 1px solid var(--sidebar-border);
+    border-radius: 6px;
     color: var(--sidebar-text);
     cursor: pointer;
     padding: 0;
+    box-shadow: 0 1px 0 rgba(255,255,255,0.08) inset, 0 1px 2px rgba(0,0,0,0.22);
   }
-  .arrange-btn:hover:not(:disabled) { background: rgba(236,228,214,0.08); border-color: rgba(236,228,214,0.6); }
-  .arrange-btn:disabled { opacity: 0.32; cursor: not-allowed; }
+  .arrange-btn:hover:not(:disabled) { background: linear-gradient(#5b6371, var(--sidebar-raised-hi)); border-color: #6d7583; }
+  .arrange-btn:active:not(:disabled) { box-shadow: 0 1px 3px rgba(0,0,0,0.3) inset; transform: translateY(1px); }
+  .arrange-btn:disabled { opacity: 0.32; cursor: not-allowed; box-shadow: none; }
   .arrange-btn svg { width: 20px; height: 20px; }
   .arrange-btn rect { fill: currentColor; }
   .arrange-btn line { stroke: var(--accent-hi); stroke-width: 1.2; }
@@ -170,8 +211,8 @@
     flex: 0 0 auto;
     width: 46px; height: 24px;
     display: flex; align-items: center; justify-content: center;
-    background: rgba(236,228,214,0.06);
-    border-radius: 2px;
+    background: rgba(0,0,0,0.18);
+    border-radius: 3px;
   }
   .depth-bar { display: block; width: 32px; background: var(--sidebar-text); border-radius: 1px; }
   .depth-btn-label { flex: 1; font-size: 0.85rem; }
@@ -181,10 +222,10 @@
     position: absolute;
     left: 0; right: 0;
     margin-top: 6px;
-    background: #2a231c;
-    border: 1px solid rgba(236,228,214,0.25);
-    border-radius: 4px;
-    box-shadow: 0 10px 26px rgba(0,0,0,0.45);
+    background: #414956;
+    border: 1px solid var(--sidebar-border);
+    border-radius: 6px;
+    box-shadow: 0 10px 26px rgba(0,0,0,0.35);
     padding: 6px;
     z-index: 20;
   }
@@ -192,19 +233,19 @@
   .depth-row {
     display: flex; align-items: center; gap: 10px;
     padding: 7px 8px;
-    border-radius: 3px;
+    border-radius: 4px;
     cursor: pointer;
   }
-  .depth-row:hover { background: rgba(236,228,214,0.08); }
-  .depth-row.active { background: rgba(162,62,45,0.35); }
+  .depth-row:hover { background: rgba(255,255,255,0.09); }
+  .depth-row.active { background: var(--accent); }
   .depth-row-label { font-size: 0.82rem; color: var(--sidebar-text); }
-  .depth-divider { height: 1px; background: rgba(236,228,214,0.15); margin: 6px 2px; }
+  .depth-divider { height: 1px; background: rgba(255,255,255,0.14); margin: 6px 2px; }
   .depth-custom-row { display: flex; align-items: center; gap: 8px; padding: 4px 6px 2px; }
   .depth-custom-row input[type="number"] {
     width: 56px;
-    background: rgba(236,228,214,0.08);
-    border: 1px solid rgba(236,228,214,0.25);
-    border-radius: 3px;
+    background: rgba(0,0,0,0.22);
+    border: 1px solid var(--sidebar-border);
+    border-radius: 4px;
     color: var(--sidebar-text);
     font-family: "Source Serif 4", serif;
     font-size: 0.85rem;
@@ -213,22 +254,22 @@
   .depth-custom-unit { font-size: 0.78rem; color: var(--sidebar-muted); }
   .depth-custom-btn {
     margin-left: auto;
-    background: var(--accent);
+    background: linear-gradient(var(--accent-hi), var(--accent));
     border: 1px solid var(--accent);
     color: #fff;
-    font-family: "Special Elite", monospace;
-    font-size: 0.7rem;
-    border-radius: 3px;
-    padding: 6px 10px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    border-radius: 5px;
+    padding: 6px 12px;
     cursor: pointer;
   }
-  .depth-custom-btn:hover { background: var(--accent-hi); border-color: var(--accent-hi); }
+  .depth-custom-btn:hover { background: var(--accent-hi); }
 
   #titleInput {
     width: 100%;
-    background: rgba(236,228,214,0.06);
-    border: 1px solid rgba(236,228,214,0.3);
-    border-radius: 3px;
+    background: rgba(0,0,0,0.2);
+    border: 1px solid var(--sidebar-border);
+    border-radius: 5px;
     color: var(--sidebar-text);
     font-family: "Source Serif 4", serif;
     font-size: 0.9rem;
@@ -236,44 +277,44 @@
   }
 
   #exportBtn {
-    background: var(--accent);
+    background: linear-gradient(var(--accent-hi), var(--accent));
     border-color: var(--accent);
     color: #fff;
-    font-family: "Special Elite", monospace;
-    font-size: 0.85rem;
-    letter-spacing: 0.03em;
+    font-size: 0.95rem;
     padding: 12px;
   }
   #exportBtn:hover:not(:disabled) { background: var(--accent-hi); border-color: var(--accent-hi); }
 
   #status { font-size: 0.78rem; color: var(--sidebar-muted); line-height: 1.4; min-height: 1.2em; }
+  .file-note { font-size: 0.74rem; color: var(--sidebar-muted); margin: 8px 0 0; word-break: break-all; }
 
   .zoom-row { display: flex; align-items: center; gap: 8px; }
   .zoom-btn {
-    width: 32px; height: 32px;
-    border-radius: 4px;
-    border: 1px solid rgba(236,228,214,0.3);
-    background: transparent;
+    width: 34px; height: 34px;
+    border-radius: 6px;
+    border: 1px solid var(--sidebar-border);
+    background: linear-gradient(var(--sidebar-raised-hi), var(--sidebar-raised));
     color: var(--sidebar-text);
     font-size: 1.15rem;
     line-height: 1;
     cursor: pointer;
+    box-shadow: 0 1px 0 rgba(255,255,255,0.08) inset, 0 1px 2px rgba(0,0,0,0.22);
   }
-  .zoom-btn:hover:not(:disabled) { background: rgba(236,228,214,0.08); border-color: rgba(236,228,214,0.6); }
-  .zoom-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .zoom-btn:hover:not(:disabled) { background: linear-gradient(#5b6371, var(--sidebar-raised-hi)); border-color: #6d7583; }
+  .zoom-btn:active:not(:disabled) { box-shadow: 0 1px 3px rgba(0,0,0,0.3) inset; transform: translateY(1px); }
+  .zoom-btn:disabled { opacity: 0.35; cursor: not-allowed; box-shadow: none; }
   .zoom-label {
     flex: 1;
     text-align: center;
-    background: transparent;
-    border: 1px solid rgba(236,228,214,0.2);
-    border-radius: 4px;
+    background: rgba(0,0,0,0.2);
+    border: 1px solid var(--sidebar-border);
+    border-radius: 6px;
     color: var(--sidebar-text);
-    font-family: "Special Elite", monospace;
-    font-size: 0.8rem;
-    padding: 8px 0;
+    font-size: 0.85rem;
+    padding: 9px 0;
     cursor: pointer;
   }
-  .zoom-label:hover:not(:disabled) { border-color: rgba(236,228,214,0.6); }
+  .zoom-label:hover:not(:disabled) { border-color: #6d7583; }
   .zoom-label:disabled { opacity: 0.35; cursor: not-allowed; }
 
   /* ---------- Main viewer ---------- */
@@ -321,17 +362,6 @@
   .page canvas { display: block; position: absolute; top: 0; left: 0; max-width: 100%; height: auto; }
   .page .pdf-layer { position: relative; }
   .page .mark-layer { touch-action: none; cursor: crosshair; }
-  .grid-layer {
-    position: absolute;
-    inset: 0;
-    display: none;
-    pointer-events: none;
-    z-index: 4;
-    background-image:
-      repeating-linear-gradient(to bottom, rgba(61,125,201,0.55) 0 1px, transparent 1px 24px),
-      repeating-linear-gradient(to right, rgba(61,125,201,0.22) 0 1px, transparent 1px 24px);
-  }
-  body.show-grid .grid-layer { display: block; }
 
   .skew-row { display: flex; align-items: center; gap: 8px; }
   .skew-row input[type="range"] { flex: 1; accent-color: var(--accent); }
@@ -348,7 +378,7 @@
     font-family: "Special Elite", monospace;
     font-size: 0.68rem;
     color: var(--ink-soft);
-    background: rgba(239,231,214,0.9);
+    background: rgba(251,250,247,0.92);
     border: 1px solid var(--line);
     border-radius: 3px;
     padding: 3px 7px;
@@ -410,6 +440,7 @@
   </div>
 
   <div class="section">
+    <p class="section-label">block size</p>
     <div class="depth-picker" id="depthPicker">
       <button id="depthBtn" class="btn depth-btn" type="button" aria-haspopup="listbox" aria-expanded="false">
         <span class="depth-swatch"><span id="depthBtnBar" class="depth-bar"></span></span>
@@ -507,10 +538,11 @@
   <div class="section">
     <p class="section-label">save &amp; resume</p>
     <div class="btn-row">
-      <button id="saveProgressBtn" class="btn" type="button" disabled>Save progress</button>
-      <button id="loadProgressBtn" class="btn" type="button">Load progress…</button>
+      <button id="saveProgressBtn" class="btn" type="button" disabled title="Shift-click to save to a different file">Save</button>
+      <button id="loadProgressBtn" class="btn" type="button">Load…</button>
     </div>
     <input id="progressInput" type="file" accept="application/json,.json">
+    <p class="file-note" id="progressNote"></p>
     <p class="hint">Saves only your redaction positions, not the document. After the first save, the button overwrites that same file — shift-click it to save somewhere else. To resume, reopen the same file first, then load its saved progress.</p>
   </div>
 
@@ -572,6 +604,57 @@ const skewResetBtn = document.getElementById('skewResetBtn');
 const skewAllBtn = document.getElementById('skewAllBtn');
 const skewHint = document.getElementById('skewHint');
 const gridToggle = document.getElementById('gridToggle');
+const progressNote = document.getElementById('progressNote');
+
+/* ---------- collapsible sidebar sections ---------- */
+
+const SECTION_KEY = 'erasure.openSection';
+
+function setupSections() {
+  let openKey = '';
+  try { openKey = localStorage.getItem(SECTION_KEY) || ''; } catch (e) { openKey = ''; }
+  const sections = [];
+
+  document.querySelectorAll('#sidebar .section').forEach(section => {
+    const label = section.querySelector('.section-label');
+    if (!label) return;
+    const key = label.textContent.trim();
+
+    const head = document.createElement('button');
+    head.type = 'button';
+    head.className = 'section-head';
+    label.replaceWith(head);
+    head.appendChild(label);
+    const caret = document.createElement('span');
+    caret.className = 'section-caret';
+    caret.textContent = '▾';
+    head.appendChild(caret);
+
+    const body = document.createElement('div');
+    body.className = 'section-body';
+    while (head.nextSibling) body.appendChild(head.nextSibling);
+    section.appendChild(body);
+    section.classList.add('collapsible');
+
+    const entry = {
+      key,
+      setOpen(open) {
+        section.classList.toggle('open', open);
+        head.setAttribute('aria-expanded', String(open));
+      },
+      isOpen: () => section.classList.contains('open')
+    };
+    sections.push(entry);
+    entry.setOpen(key === openKey);
+
+    head.addEventListener('click', () => {
+      const open = !entry.isOpen();
+      sections.forEach(s => s.setOpen(open && s === entry));
+      try { localStorage.setItem(SECTION_KEY, open ? key : ''); } catch (e) {}
+    });
+  });
+}
+setupSections();
 const cropBtn = document.getElementById('cropBtn');
 const cropActions = document.getElementById('cropActions');
 const cropApplyBtn = document.getElementById('cropApplyBtn');
@@ -610,6 +693,7 @@ let moveOrig = null;
 let marqueeRect = null;
 let lastActivePd = null;
 let cropMode = false;
+let gridVisible = false;
 let resizeOrig = null;
 let resizeHandle = null;
 
@@ -945,6 +1029,7 @@ async function loadFile(file) {
   pendingSession = null;
   updateSkewUI();
   updateCropUI();
+  updateGrid();
   persistSession();
 }
 
@@ -959,10 +1044,9 @@ function resetWorkspace() {
   refreshButtons();
   exportBtn.disabled = true;
   saveProgressBtn.disabled = true;
-  if (!progressFileHandle) {
-    saveProgressBtn.textContent = 'Save progress';
-    saveProgressBtn.title = '';
-  }
+  saveProgressBtn.textContent = 'Save';
+  saveProgressBtn.title = 'Shift-click to save to a different file';
+  if (!progressFileHandle) progressNote.textContent = '';
   applyAllBtn.disabled = true;
   applySizeAllBtn.disabled = true;
   zoomOutBtn.disabled = true;
@@ -996,9 +1080,6 @@ function createPageShell(viewportPt, renderScale, pageNum, totalPages) {
   srcCanvas.width = width;
   srcCanvas.height = height;
 
-  const grid = document.createElement('div');
-  grid.className = 'grid-layer';
-
   const chrome = document.createElement('div');
   chrome.className = 'page-chrome';
   const numTag = document.createElement('span');
@@ -1008,7 +1089,6 @@ function createPageShell(viewportPt, renderScale, pageNum, totalPages) {
 
   pageWrap.appendChild(canvas);
   pageWrap.appendChild(overlay);
-  pageWrap.appendChild(grid);
   pageWrap.appendChild(chrome);
   pagesContainer.appendChild(pageWrap);
 
@@ -1173,9 +1253,9 @@ async function loadTxt(file) {
       const pageLines = wrapped.slice(p * linesPerPage, (p + 1) * linesPerPage);
       const { ctx, overlay, pd } = createPageShell(viewportPt, renderScale, p + 1, totalPages);
 
-      ctx.fillStyle = '#efe7d6';
+      ctx.fillStyle = '#fbfaf7';
       ctx.fillRect(0, 0, pageWpx, pageHpx);
-      ctx.fillStyle = '#201b16';
+      ctx.fillStyle = '#2b3038';
       ctx.font = fontFamily;
       ctx.textBaseline = 'top';
       pageLines.forEach((line, i) => ctx.fillText(line, marginPx, marginPx + i * lineHeightPx));
@@ -1414,7 +1494,8 @@ function setDeskew(pd, deg) {
 
 let adjustingSkew = false;
 function updateGrid() {
-  document.body.classList.toggle('show-grid', gridToggle.checked || adjustingSkew);
+  gridVisible = gridToggle.checked || adjustingSkew;
+  pagesData.forEach(pd => redraw(pd));
 }
 
 gridToggle.addEventListener('change', updateGrid);
@@ -1914,6 +1995,22 @@ function drawCropOverlay(ctx, pd) {
   drawHandles(ctx, box, true);
 }
 
+function drawGrid(ctx, pd) {
+  const step = 16 * pd.renderScale;
+  const w = pd.srcCanvas.width, h = pd.srcCanvas.height;
+  ctx.save();
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = 'rgba(61,125,201,0.20)';
+  ctx.beginPath();
+  for (let x = 0; x <= w; x += step * 2) { ctx.moveTo(Math.round(x) + 0.5, 0); ctx.lineTo(Math.round(x) + 0.5, h); }
+  ctx.stroke();
+  ctx.strokeStyle = 'rgba(61,125,201,0.55)';
+  ctx.beginPath();
+  for (let y = 0; y <= h; y += step) { ctx.moveTo(0, Math.round(y) + 0.5); ctx.lineTo(w, Math.round(y) + 0.5); }
+  ctx.stroke();
+  ctx.restore();
+}
+
 function redraw(pd, preview) {
   const ctx = pd.octx;
   const off = cropOffsetPx(pd);
@@ -1924,6 +2021,7 @@ function redraw(pd, preview) {
   pd.marks.forEach(m => drawRect(ctx, m));
   if (preview) drawRect(ctx, preview);
   ctx.globalAlpha = 1;
+  if (gridVisible) drawGrid(ctx, pd);
   if (cropMode) {
     drawCropOverlay(ctx, pd);
   } else if (selected && selected.pd === pd) {
@@ -2129,14 +2227,11 @@ async function saveProgress(opts = {}) {
 
 let saveFlashTimer = null;
 function confirmSave(handle) {
-  const time = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' });
-  statusEl.textContent = `Saved ${handle.name} at ${time}.`;
+  const time = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  progressNote.textContent = `Saved to ${handle.name} at ${time}.`;
   saveProgressBtn.textContent = 'Saved ✓';
   clearTimeout(saveFlashTimer);
-  saveFlashTimer = setTimeout(() => {
-    saveProgressBtn.textContent = `Save to ${handle.name}`;
-    saveProgressBtn.title = 'Shift-click to save to a different file';
-  }, 900);
+  saveFlashTimer = setTimeout(() => { saveProgressBtn.textContent = 'Save'; }, 1200);
 }
 
 function setCurrentColor(color) {
