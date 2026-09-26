@@ -321,6 +321,27 @@
   .page canvas { display: block; position: absolute; top: 0; left: 0; max-width: 100%; height: auto; }
   .page .pdf-layer { position: relative; }
   .page .mark-layer { touch-action: none; cursor: crosshair; }
+  .grid-layer {
+    position: absolute;
+    inset: 0;
+    display: none;
+    pointer-events: none;
+    z-index: 4;
+    background-image:
+      repeating-linear-gradient(to bottom, rgba(61,125,201,0.55) 0 1px, transparent 1px 24px),
+      repeating-linear-gradient(to right, rgba(61,125,201,0.22) 0 1px, transparent 1px 24px);
+  }
+  body.show-grid .grid-layer { display: block; }
+
+  .skew-row { display: flex; align-items: center; gap: 8px; }
+  .skew-row input[type="range"] { flex: 1; accent-color: var(--accent); }
+  .skew-value {
+    font-family: "Special Elite", monospace;
+    font-size: 0.72rem;
+    color: var(--sidebar-text);
+    min-width: 52px;
+    text-align: right;
+  }
 
   .page-chrome { position: absolute; top: 8px; right: 8px; display: flex; gap: 6px; z-index: 5; }
   .page-num {
@@ -409,6 +430,20 @@
     <p class="hint">Every block keeps the same depth, so your lines stay lined up. Pick a preset here — if a block's selected, it's applied right away.</p>
     <div style="height:10px;"></div>
     <button id="applySizeAllBtn" class="btn" type="button" disabled>Apply size to all blocks</button>
+  </div>
+
+  <div class="section">
+    <p class="section-label">straighten</p>
+    <div class="skew-row">
+      <input id="skewSlider" type="range" min="-5" max="5" step="0.1" value="0" disabled aria-label="Rotate page">
+      <span id="skewValue" class="skew-value">0.0°</span>
+    </div>
+    <div style="height:8px;"></div>
+    <div class="btn-row">
+      <button id="skewResetBtn" class="btn" type="button" disabled>Reset</button>
+      <button id="skewAllBtn" class="btn" type="button" disabled>Apply to all</button>
+    </div>
+    <p class="hint" id="skewHint">Nudge a crooked scan level. A grid appears while you drag so you can line the text up.</p>
   </div>
 
   <div class="section">
@@ -517,6 +552,11 @@ const loadProgressBtn = document.getElementById('loadProgressBtn');
 const progressInput = document.getElementById('progressInput');
 const arrangeHint = document.getElementById('arrangeHint');
 const resumeBtn = document.getElementById('resumeBtn');
+const skewSlider = document.getElementById('skewSlider');
+const skewValue = document.getElementById('skewValue');
+const skewResetBtn = document.getElementById('skewResetBtn');
+const skewAllBtn = document.getElementById('skewAllBtn');
+const skewHint = document.getElementById('skewHint');
 
 let pagesData = [];        // {pageNum, canvas, overlay, octx, marks:[], renderScale, viewportPt}
 let undoStack = [];        // {type:'add'|'remove'|'move'|'resize', pageIndex, mark, ...}
@@ -804,7 +844,7 @@ mainEl.addEventListener('pointerdown', e => {
 });
 
 window.addEventListener('keydown', e => {
-  if (document.activeElement === titleInput || document.activeElement === customColor) return;
+  if (document.activeElement === titleInput || document.activeElement === customColor || document.activeElement === skewSlider) return;
   if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); return; }
 
   if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'a') {
@@ -876,6 +916,7 @@ async function loadFile(file) {
     applyProgress(pendingSession.progress);
   }
   pendingSession = null;
+  updateSkewUI();
   persistSession();
 }
 
@@ -916,6 +957,14 @@ function createPageShell(viewportPt, renderScale, pageNum, totalPages) {
   overlay.width = width;
   overlay.height = height;
 
+  // The page is rendered here once, then drawn into `canvas` through the deskew rotation.
+  const srcCanvas = document.createElement('canvas');
+  srcCanvas.width = width;
+  srcCanvas.height = height;
+
+  const grid = document.createElement('div');
+  grid.className = 'grid-layer';
+
   const chrome = document.createElement('div');
   chrome.className = 'page-chrome';
   const numTag = document.createElement('span');
@@ -925,20 +974,49 @@ function createPageShell(viewportPt, renderScale, pageNum, totalPages) {
 
   pageWrap.appendChild(canvas);
   pageWrap.appendChild(overlay);
+  pageWrap.appendChild(grid);
   pageWrap.appendChild(chrome);
   pagesContainer.appendChild(pageWrap);
 
   const pd = {
     pageNum,
-    canvas, overlay, pageWrap,
+    canvas, overlay, pageWrap, srcCanvas,
     baseWidth: width, baseHeight: height,
     octx: overlay.getContext('2d'),
     marks: [],
+    deskew: 0,
     renderScale,
     viewportPt: { width: viewportPt.width, height: viewportPt.height }
   };
 
-  return { canvas, overlay, ctx: canvas.getContext('2d'), pd };
+  return { canvas, overlay, ctx: srcCanvas.getContext('2d'), pd };
+}
+
+/* ---------- straightening ---------- */
+
+// Scale just enough that the rotated page still covers the whole canvas.
+function coverScale(w, h, rad) {
+  const c = Math.abs(Math.cos(rad)), s = Math.abs(Math.sin(rad));
+  return Math.max((w * c + h * s) / w, (w * s + h * c) / h);
+}
+
+function applyDeskew(pd) {
+  const ctx = pd.canvas.getContext('2d');
+  const w = pd.canvas.width, h = pd.canvas.height;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, w, h);
+  if (!pd.deskew) {
+    ctx.drawImage(pd.srcCanvas, 0, 0);
+    return;
+  }
+  const rad = pd.deskew * Math.PI / 180;
+  const scale = coverScale(w, h, rad);
+  ctx.save();
+  ctx.translate(w / 2, h / 2);
+  ctx.rotate(rad);
+  ctx.scale(scale, scale);
+  ctx.drawImage(pd.srcCanvas, -w / 2, -h / 2);
+  ctx.restore();
 }
 
 async function loadPdf(file) {
@@ -957,6 +1035,7 @@ async function loadPdf(file) {
 
       const { ctx, overlay, pd } = createPageShell(viewportPt, renderScale, i, pdfDoc.numPages);
       await page.render({ canvasContext: ctx, viewport }).promise;
+      applyDeskew(pd);
 
       pagesData.push(pd);
       attachPointerHandlers(overlay, pd);
@@ -1033,6 +1112,7 @@ async function loadTxt(file) {
       ctx.font = fontFamily;
       ctx.textBaseline = 'top';
       pageLines.forEach((line, i) => ctx.fillText(line, marginPx, marginPx + i * lineHeightPx));
+      applyDeskew(pd);
 
       pagesData.push(pd);
       attachPointerHandlers(overlay, pd);
@@ -1159,6 +1239,62 @@ async function resumeSession() {
 
 resumeBtn.addEventListener('click', resumeSession);
 restoreSession();
+
+/* ---------- straighten controls ---------- */
+
+function currentPage() {
+  return lastActivePd && pagesData.includes(lastActivePd) ? lastActivePd : pagesData[0] || null;
+}
+
+function updateSkewUI() {
+  const pd = currentPage();
+  const enabled = !!pd;
+  skewSlider.disabled = !enabled;
+  skewResetBtn.disabled = !enabled || !pd.deskew;
+  skewAllBtn.disabled = !enabled || pagesData.length < 2;
+  if (!pd) { skewValue.textContent = '0.0°'; return; }
+  skewSlider.value = pd.deskew;
+  skewValue.textContent = `${pd.deskew > 0 ? '+' : ''}${pd.deskew.toFixed(1)}°`;
+  skewHint.textContent = pagesData.length > 1
+    ? `Straightening page ${pd.pageNum}. Click a page to switch to it.`
+    : 'Nudge a crooked scan level. A grid appears while you drag so you can line the text up.';
+}
+
+function setDeskew(pd, deg) {
+  pd.deskew = Math.min(5, Math.max(-5, Math.round(deg * 10) / 10));
+  applyDeskew(pd);
+}
+
+let gridTimer = null;
+function flashGrid() {
+  document.body.classList.add('show-grid');
+  clearTimeout(gridTimer);
+  gridTimer = setTimeout(() => document.body.classList.remove('show-grid'), 1200);
+}
+
+skewSlider.addEventListener('input', () => {
+  const pd = currentPage();
+  if (!pd) return;
+  setDeskew(pd, parseFloat(skewSlider.value));
+  flashGrid();
+  updateSkewUI();
+  persistSession();
+});
+skewSlider.addEventListener('pointerdown', () => document.body.classList.add('show-grid'));
+skewResetBtn.addEventListener('click', () => {
+  const pd = currentPage();
+  if (!pd) return;
+  setDeskew(pd, 0);
+  updateSkewUI();
+  persistSession();
+});
+skewAllBtn.addEventListener('click', () => {
+  const pd = currentPage();
+  if (!pd) return;
+  pagesData.forEach(p => { if (p !== pd) setDeskew(p, pd.deskew); });
+  flashGrid();
+  persistSession();
+});
 
 function getPos(evt, canvas) {
   const rect = canvas.getBoundingClientRect();
@@ -1384,6 +1520,7 @@ function attachPointerHandlers(overlay, pd) {
     activePage = pd;
     lastActivePd = pd;
     startPos = pos;
+    updateSkewUI();
 
     const single = selected && selected.pd === pd ? soleMark() : null;
     if (single) {
@@ -1652,6 +1789,7 @@ function refreshButtons() {
   arrangeHint.textContent = multi
     ? `${selCount()} blocks selected.`
     : 'Shift-click blocks to select several, or Alt-drag a box around them.';
+  updateSkewUI();
   persistSession();
 }
 
@@ -1737,6 +1875,7 @@ function buildProgressPayload() {
     pages: pagesData.map(pd => ({
       width: Math.round(pd.viewportPt.width * 100) / 100,
       height: Math.round(pd.viewportPt.height * 100) / 100,
+      deskew: pd.deskew || 0,
       marks: pd.marks.map(m => ({
         x: Math.round((m.x / pd.renderScale) * 100) / 100,
         y: Math.round((m.y / pd.renderScale) * 100) / 100,
@@ -1818,6 +1957,7 @@ function applyProgress(data) {
     if (Math.abs(pd.viewportPt.width - saved.width) > 2 || Math.abs(pd.viewportPt.height - saved.height) > 2) {
       mismatched = true;
     }
+    if (typeof saved.deskew === 'number' && isFinite(saved.deskew)) setDeskew(pd, saved.deskew);
     pd.marks = (saved.marks || []).map(m => ({
       x: m.x * pd.renderScale,
       y: m.y * pd.renderScale,
