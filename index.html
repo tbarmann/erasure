@@ -497,7 +497,7 @@
       <button id="loadProgressBtn" class="btn" type="button">Load progress…</button>
     </div>
     <input id="progressInput" type="file" accept="application/json,.json">
-    <p class="hint">Saves only your redaction positions, not the document. The save dialog opens in the document's own folder, and saving again overwrites the same file. To resume, reopen the same file first, then load its saved progress.</p>
+    <p class="hint">Saves only your redaction positions, not the document. After the first save, the button overwrites that same file — shift-click it to save somewhere else. To resume, reopen the same file first, then load its saved progress.</p>
   </div>
 
   <div class="section" style="margin-top:auto;">
@@ -823,7 +823,7 @@ clearAllBtn.addEventListener('click', () => {
   refreshButtons();
 });
 exportBtn.addEventListener('click', exportPdf);
-saveProgressBtn.addEventListener('click', saveProgress);
+saveProgressBtn.addEventListener('click', e => saveProgress({ saveAs: e.shiftKey || e.altKey }));
 loadProgressBtn.addEventListener('click', () => progressInput.click());
 progressInput.addEventListener('change', async e => {
   const f = e.target.files[0];
@@ -929,6 +929,10 @@ function resetWorkspace() {
   refreshButtons();
   exportBtn.disabled = true;
   saveProgressBtn.disabled = true;
+  if (!progressFileHandle) {
+    saveProgressBtn.textContent = 'Save progress';
+    saveProgressBtn.title = '';
+  }
   applyAllBtn.disabled = true;
   applySizeAllBtn.disabled = true;
   zoomOutBtn.disabled = true;
@@ -1887,8 +1891,9 @@ function buildProgressPayload() {
   };
 }
 
-async function saveProgress() {
+async function saveProgress(opts = {}) {
   if (!pagesData.length) return;
+  if (opts.saveAs) progressFileHandle = null;
   const payload = buildProgressPayload();
   const fallback = sanitizeFileName(sourceFileBaseName) || 'erasure-progress';
   const name = sanitizeFileName(titleInput.value) || fallback;
@@ -1896,7 +1901,7 @@ async function saveProgress() {
 
   if (progressFileHandle && await ensureWritable(progressFileHandle)) {
     await writeHandle(progressFileHandle, blob);
-    statusEl.textContent = `Progress saved to ${progressFileHandle.name}.`;
+    confirmSave(progressFileHandle);
     persistSession();
     return;
   }
@@ -1906,9 +1911,21 @@ async function saveProgress() {
   });
   if (result && result.createWritable) {
     progressFileHandle = result;
-    statusEl.textContent = `Progress saved to ${result.name}.`;
+    confirmSave(result);
     persistSession();
   }
+}
+
+let saveFlashTimer = null;
+function confirmSave(handle) {
+  const time = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' });
+  statusEl.textContent = `Saved ${handle.name} at ${time}.`;
+  saveProgressBtn.textContent = 'Saved ✓';
+  clearTimeout(saveFlashTimer);
+  saveFlashTimer = setTimeout(() => {
+    saveProgressBtn.textContent = `Save to ${handle.name}`;
+    saveProgressBtn.title = 'Shift-click to save to a different file';
+  }, 900);
 }
 
 function setCurrentColor(color) {
